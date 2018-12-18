@@ -1,4 +1,4 @@
-import math
+'''import math
 import random
 import yaml
 
@@ -42,6 +42,43 @@ print(deneme2)
 received = [[0,1,2,3,4,5], 1,3,4,5]
 print(received[0].__len__())
 username_check = deneme2.get("mustafa", "NULL")
+black_list = []
+black_list.append("mustafasad")
+if "mustafa" in black_list:
+    print("VAR")
+else:
+    print("YOK")
 print(username_check)
 import requests
 print(requests.get('http://ip.42.pl/raw').text)
+
+import sys
+
+from PyQt5.QtCore import  pyqtSlot
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
+from PyQt5.uic import loadUi
+
+
+class mainwindow(QMainWindow):
+    def __init__(self, parent = None):
+        super(mainwindow, self).__init__()
+        loadUi('mainwindow.ui', self)
+        self.setWindowTitle('Deneme')
+        #Container Widget
+        widget = QWidget()
+        #Layout of Container Widget
+        layout = QVBoxLayout(self)
+        for _ in range(100):
+            btn = QPushButton()
+            layout.addWidget(btn)
+        widget.setLayout(layout)
+        self.scrollArea_all_peers.setWidget(widget)
+        self.textBrowser.setText("deneme")
+
+
+app = QApplication(sys.argv)
+widget = mainwindow()
+widget.show()
+sys.exit(app.exec_())
+
+'''
