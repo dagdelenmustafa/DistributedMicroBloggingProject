@@ -12,6 +12,8 @@ import time
 import yaml
 import requests
 import uuid
+import hashlib
+
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QThread
@@ -20,12 +22,15 @@ from PyQt5.uic import loadUi
 
 
 
-
 # TODO: Arayüz Ayrıntıları yapılacak
 # TODO: Belirli aralıklarla Arayüzün yenilenmesi sağlanacak
 # TODO: Public Private Key ikilisi eklenmesi yapılacak
 # TODO: RefreshThread tüm alanlar için yapılacak
 # TODO: Yayınlama protokolü yapılacak
+
+#CONDITIONS
+new_user = "0"
+new_subscribe_request = "1"
 
 
 
@@ -51,7 +56,7 @@ class LoggerThread(threading.Thread):
 
     def run(self):
         global terminate_all_thread
-        openfile = "Server_Logs"
+        openfile = "app_data/Server_Logs.txt"
         f = open(openfile, 'w')
         while not terminate_all_thread:
             if not self.logger_queue.empty():
@@ -61,7 +66,7 @@ class LoggerThread(threading.Thread):
 
 class New_Peer_Thread(threading.Thread):
 
-    def __init__(self, peer_list, my_ip, my_port, my_username, my_type):
+    def __init__(self, peer_list, my_ip, my_port, my_username, my_type, my_hash):
         threading.Thread.__init__(self)
         self.peer_list = peer_list
         self.my_ip = my_ip
@@ -69,7 +74,7 @@ class New_Peer_Thread(threading.Thread):
         self.my_username = my_username
         self.my_type = my_type
         self.message = "LSQ"
-        self.USRString = "USR " + my_username + " " + str(my_ip) + " " + str(my_port) + " " + str(my_type)
+        self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
 
     def run(self):
         global terminate_all_thread
@@ -77,7 +82,7 @@ class New_Peer_Thread(threading.Thread):
             time.sleep(120)
             for k, v in self.peer_list.items():
                 s = socket.socket()
-                s.connect((v[0], v[1]))
+                s.connect((v[0], int(v[1])))
                 s.send(self.USRString.encode)
                 s.send(self.message.encode())
                 s.close()
@@ -150,21 +155,23 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
                 terminateThread = True
 
 
-        if receivedObject[0] == "USR" and receivedObject.__len__() != 5:
+        if receivedObject[0] == "USR" and receivedObject.__len__() != 6:
             if receivedObject[1] != "":
                 received_object_for_new_user = receivedObject[1].split(" ")
                 username_check = peer_list.get(received_object_for_new_user[0], "NULL")
                 if username_check == "NULL":
-                    if received_object_for_new_user.__len__() == 4:
+                    if received_object_for_new_user.__len__() == 5:
                         print("New User Register")
                         peer_username = received_object_for_new_user[0]
                         peer_ip = received_object_for_new_user[1]
                         peer_port = received_object_for_new_user[2]
-                        peer_type = received_object_for_new_user[3]
+                        peer_hash = received_object_for_new_user[3]
+                        peer_type = received_object_for_new_user[4]
                         # TODO: boşluk karakteri ile test et
                         connections[peer_username] = [message_queue, connection]
-                        peer_list[peer_username] = [peer_ip, peer_port, peer_type, str(time.ctime()), "ON"]
+                        peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
                         message_queue.put("HEL " + peer_username + "\n")
+                        refresh_ui_queue.put(new_user)
                     else:
                         message_queue.put("ERR\n")
                 else:
@@ -237,7 +244,9 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
                 message_queue.put("BLC\n")
             else:
                 if peer_username != "NULL":
+                    print(peer_username)
                     my_subscribe_request.append(peer_username)
+                    refresh_ui_queue.put(new_subscribe_request)
                 else:
                     message_queue.put("ERL\n")
 
@@ -298,7 +307,8 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
             print("Ending with QUI" + str(threading.enumerate()))
             terminateThread = True
 
-        elif receivedObject[0] == "SOK" or receivedObject[0] == "MOK" or receivedObject[0] == "YOK" or receivedObject[0] == "TOK":
+        elif receivedObject[0] == "SOK" or receivedObject[0] == "MOK" or receivedObject[0] == "YOK"\
+                or receivedObject[0] == "TOK" or receivedObject[0] == "PSO":
             print(receivedObject[0])
             pass
 
@@ -356,7 +366,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
     def __init__(self, connections, logger_queue, peer_list, my_ip, my_port,
                  my_username, my_type, my_subscribers, my_subscribe_request,
                  subscribed_peers, black_list,
-                 sended_subscribe_request, peer_list_that_block_me):
+                 sended_subscribe_request, peer_list_that_block_me, my_hash):
         super(QtSideAndClient, self).__init__()
         self.connections = connections
         self.logger_queue = logger_queue
@@ -371,15 +381,18 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.black_list =black_list
         self.sended_subscribe_request = sended_subscribe_request
         self.peer_list_that_block_me = peer_list_that_block_me
-        self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_type)
+        self.my_hash = my_hash
+        self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
         self.refreshUI()
 
 
     def refreshUI(self):
         global widget
-        loadUi('mainwindow.ui', self)
+        loadUi('mainwindow2.ui', self)
         self.setWindowTitle('Deneme')
         # Container Widget
+
+
         widget = QWidget()
         # Layout of Container Widget
         layout = QVBoxLayout(self)
@@ -390,25 +403,83 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             layout.addWidget(btn)
         widget.setLayout(layout)
         self.scrollArea_all_peers.setWidget(widget)
-        self.textBrowser.setText("deneme")
-        self.show()
+
+
+        widget1 = QWidget()
+        layout1 = QVBoxLayout(self)
+        # Layout of Container Widget
+        for i in range(self.my_subscribe_request.__len__()):
+            btn = QPushButton(self.my_subscribe_request[i])
+            btn.setObjectName(self.my_subscribe_request[i])
+            btn.clicked.connect(partial(self.button_pressed, self.my_subscribe_request[i]))
+            layout1.addWidget(btn)
+        widget1.setLayout(layout1)
+        self.scrollArea_subscriber_requests.setWidget(widget1)
+
+
+
+        #self.textBrowser.setText("deneme")
+        self.pushButton.pressed.connect(self.publish_blog)
         self.refresh_thread = RefreshThread()
-        self.refresh_thread.ready_refresh.connect(partial(self.on_UI_ready, widget, layout))
+        self.refresh_thread.ready_refresh.connect(partial(self.on_UI_ready, widget, widget1, layout, layout1))
         self.refresh_thread.start()
+        self.show()
+
 
     def button_pressed(self, k):
         print('Button pressed' + str(k))
 
-    def on_UI_ready(self, widget, layout, data):
+    def on_UI_ready(self, widget, widget1, layout, layout1,data):
         items = (layout.itemAt(i).widget().objectName() for i in range(layout.count()))
         items = list(items)
-        for k, v in self.peer_list.items():
-            if k not in items:
-                btn = QPushButton(k)
-                btn.setObjectName(k)
-                btn.clicked.connect(partial(self.button_pressed, k))
-                layout.addWidget(btn)
-                widget.setLayout(layout)
+
+        if data == new_user:
+            for k, v in self.peer_list.items():
+                if k not in items:
+                    btn = QPushButton(k)
+                    btn.setObjectName(k)
+                    btn.clicked.connect(partial(self.button_pressed, k))
+                    layout.addWidget(btn)
+                    widget.setLayout(layout)
+        else:
+            for i in range(self.my_subscribe_request.__len__()):
+                peer = self.peer_list.get(self.my_subscribe_request[i])
+                btn = QPushButton(str(self.my_subscribe_request[i]))
+                btn.setObjectName(str(self.my_subscribe_request[i]))
+                btn.clicked.connect(partial(self.button_pressed, str(self.my_subscribe_request[i])))
+                layout1.addWidget(btn)
+                widget1.setLayout(layout1)
+
+    def publish_blog(self):
+        blog_text = self.textEdit.toPlainText()
+        openfile = "app_data/"+self.my_username+".txt"
+        f = open(openfile, 'a+')
+        f.write(blog_text + "\n")
+        m = hashlib.md5()
+        m.update((blog_text + " " + str(datetime.now())).encode())
+        self.my_hash = m.hexdigest()
+        for i in range(self.my_subscribers.__len__()):
+            peer = self.peer_list.get(self.my_subscribers[i], "NULL")
+            if peer != "NULL":
+                s = socket.socket()
+                print(peer[0])
+                print(peer[1])
+                s.connect((peer[0], int(peer[1])))
+                s.send(self.USRString.encode)
+                message = "PSH " + blog_text
+                s.send(message.encode())
+                s.close()
+            else:
+                print("NULL VAR")
+        '''
+        for k, v in self.my_subscribers.items():
+            s = socket.socket()
+            s.connect((v[0], v[1]))
+            s.send(self.USRString.encode)
+            message = "PSH " + blog_text
+            s.send(message.encode())
+            s.close()
+        '''
 
 
 class RefreshThread(QThread):
@@ -419,10 +490,9 @@ class RefreshThread(QThread):
     # run method gets called when we start the thread
     def run(self):
         while True:
-            time.sleep(60)
-            print("Refresh")
-            self.ready_refresh.emit(self.i)
-            self.i = self.i + 1
+            if not refresh_ui_queue.empty():
+                condition = refresh_ui_queue.get()
+                self.ready_refresh.emit(condition)
 
 '''
 class ClientThread(threading.Thread):
@@ -494,8 +564,9 @@ class ServerThread(threading.Thread):
 
 
 def main():
-    global terminate_all_thread
+    global terminate_all_thread, refresh_ui_queue
     terminate_all_thread = False
+
 
     connections = {}
     peer_list = {}
@@ -506,6 +577,7 @@ def main():
     black_list = []
     peer_list_that_block_me = []
     logger_queue = queue.Queue()
+    refresh_ui_queue = queue.Queue()
     signal.signal(signal.SIGINT, partial(signal_handler, connections))
 
     s = socket.socket()
@@ -516,24 +588,33 @@ def main():
 
     logger_thread = LoggerThread(logger_queue).start()
 
-    my_ip = requests.get('http://ip.42.pl/raw').text
+    #my_ip = requests.get('http://ip.42.pl/raw').text
+    my_ip = socket.gethostbyname(socket.gethostname())
+    print(my_ip)
     my_port = 12344
     my_username = str(uuid.NAMESPACE_DNS.hex)
     my_type = "Y"
-    new_peer_thread = New_Peer_Thread(peer_list, my_ip, my_port, my_username, my_type)
+    m = hashlib.md5()
+    m.update((my_username +  " " + str(datetime.now())).encode())
+    my_hash = m.hexdigest()
+
+    new_peer_thread = New_Peer_Thread(peer_list, my_ip, my_port, my_username, my_type, my_hash)
     new_peer_thread.start()
 
-    peer_list["mustafa"] = ["deneme"]
-    app = QtWidgets.QApplication(sys.argv)
-    qt_and_client = QtSideAndClient(connections, logger_queue, peer_list, my_ip, my_port,
-                                    my_username, my_type, my_subscribers, my_subscribe_request,
-                                    subscribed_peers, black_list,
-                                    sended_subscribe_request, peer_list_that_block_me)
+
 
     server_thread = ServerThread(s, connections, logger_queue, peer_list, my_subscribers, black_list,
                                  my_subscribe_request, sended_subscribe_request, subscribed_peers,
                                  peer_list_that_block_me)
     server_thread.start()
+
+
+    my_subscribers.append("mustafa")
+    app = QtWidgets.QApplication(sys.argv)
+    qt_and_client = QtSideAndClient(connections, logger_queue, peer_list, my_ip, my_port,
+                                    my_username, my_type, my_subscribers, my_subscribe_request,
+                                    subscribed_peers, black_list,
+                                    sended_subscribe_request, peer_list_that_block_me, my_hash)
     app.exec_()
 
 
