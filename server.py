@@ -400,7 +400,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
         self.ui.btn_publish_blog.pressed.connect(self.publish_blog)
         self.ui.btn_get_my_blog.pressed.connect(self.get_my_blogs)
-
+        self.model = QStandardItemModel(self.ui.lw_peer_list)
 
         self.ui.lw_peer_list.clicked.connect(self.peer_list_on_click)
 
@@ -412,15 +412,15 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def on_UI_ready(self, data):
         data = data.split(":", 1)
+
         if data[0] == new_user:
-            model = QStandardItemModel(self.ui.lw_peer_list)
             item = QStandardItem()
             item.setText(data[1])
             item.setEditable(False)
             item.setData(data[1])
-            model.appendRow(item)
+            self.model.appendRow(item)
 
-            self.ui.lw_peer_list.setModel(model)
+            self.ui.lw_peer_list.setModel(self.model)
             self.ui.lw_peer_list.show()
 
     def publish_blog(self):
@@ -462,17 +462,60 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def peer_list_on_click(self):
         self.clicked_user_name = self.ui.lw_peer_list.selectedIndexes()[0].data()
-        self.ui.btn_subscribe_user.setEnabled(True)
+        if self.clicked_user_name in self.sended_subscribe_request:
+            self.ui.btn_subscribe_user.setText("Beklemede")
+        elif self.clicked_user_name in self.subscribed_peers:
+            self.ui.btn_subscribe_user.setText("Takip Ediliyor")
+        elif self.clicked_user_name in self.peer_list_that_block_me:
+            self.ui.btn_subscribe_user.setText("Engellendin")
+        elif self.clicked_user_name in self.black_list:
+            self.ui.btn_subscribe_user.setText("Engellendi")
+        else:
+            self.ui.btn_subscribe_user.setEnabled(True)
+            self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
+            self.ui.btn_subscribe_user.setText("Abone Ol")
+
+        if self.clicked_user_name in self.black_list:
+            self.ui.btn_block_user.setText("Engellendi")
+        else:
+            self.ui.btn_block_user.setText("Engelle")
+
         self.ui.btn_block_user.setEnabled(True)
-        self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
         self.ui.btn_block_user.pressed.connect(self.block_user)
 
     def subscribe_user(self):
         peer = self.peer_list.get(self.clicked_user_name, "NULL")
-        print(str(peer))
+        if peer != "NULL":
+            self.ui.btn_subscribe_user.setText("Beklemede")
+            s = socket.socket()
+            print(peer[0])
+            print(peer[1])
+            s.connect((peer[0], int(peer[1])))
+            s.send(self.USRString.encode)
+            message = "SBS"
+            s.send(message.encode())
+            s.close()
+            self.sended_subscribe_request.append(self.clicked_user_name)
+
+        else:
+            print("NULL VAR")
+
 
     def block_user(self):
-        print(self.clicked_user_name)
+        peer = self.peer_list.get(self.clicked_user_name, "NULL")
+        if peer != "NULL":
+            s = socket.socket()
+            print(peer[0])
+            print(peer[1])
+            s.connect((peer[0], int(peer[1])))
+            s.send(self.USRString.encode)
+            message = "BLU"
+            s.send(message.encode())
+            s.close()
+            self.black_list.append(self.clicked_user_name)
+            self.ui.btn_block_user.setText("Engellendi")
+        else:
+            print("NULL VAR")
 
     def run(self):
         self.show()

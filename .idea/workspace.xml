@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1736141c-33d1-475c-bf8b-13abea8e3395" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/mainwindow3_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app_data/Server_Logs.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app_data/Server_Logs.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainwindow3.ui" beforeDir="false" afterPath="$PROJECT_DIR$/mainwindow3.ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,7 +15,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme2.coverage" NAME="deneme2 Coverage Results" MODIFIED="1543936847679" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme__1_.coverage" NAME="deneme (1) Coverage Results" MODIFIED="1545761671317" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Denemeler" />
-    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1545764641938" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1545769323229" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$folder.coverage" NAME="folder Coverage Results" MODIFIED="1545230726975" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="/usr/local/lib/python3.7/site-packages/torchvision/datasets" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$transfer_learning_tutorial.coverage" NAME="transfer_learning_tutorial Coverage Results" MODIFIED="1545258214923" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$dataSetCreator.coverage" NAME="dataSetCreator Coverage Results" MODIFIED="1545244097026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Dropbox/4-Python/FaceDetection" />
@@ -27,8 +27,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/server.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="263">
-              <caret line="471" column="22" selection-start-line="471" selection-start-column="22" selection-end-line="471" selection-end-column="22" />
+            <state relative-caret-position="338">
+              <caret line="492" column="30" selection-start-line="492" selection-start-column="30" selection-end-line="492" selection-end-column="30" />
               <folding>
                 <element signature="e#19#32#0" expanded="true" />
               </folding>
@@ -56,7 +56,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>connections</find>
       <find>for</find>
       <find>bees</find>
       <find>ant</find>
@@ -86,6 +85,7 @@
       <find>psh</find>
       <find>listView</find>
       <find>Log</find>
+      <find>sended_subscribe_request</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -299,12 +299,12 @@
       <workItem from="1544821017724" duration="7809000" />
       <workItem from="1545067277638" duration="2691000" />
       <workItem from="1545080268753" duration="26817000" />
-      <workItem from="1545653828392" duration="22325000" />
+      <workItem from="1545653828392" duration="26703000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="102683000" />
+    <option name="totallyTimeSpent" value="107061000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
@@ -464,8 +464,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/server.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="263">
-          <caret line="471" column="22" selection-start-line="471" selection-start-column="22" selection-end-line="471" selection-end-column="22" />
+        <state relative-caret-position="338">
+          <caret line="492" column="30" selection-start-line="492" selection-start-column="30" selection-end-line="492" selection-end-column="30" />
           <folding>
             <element signature="e#19#32#0" expanded="true" />
           </folding>

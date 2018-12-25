@@ -1,3 +1,6 @@
-2018-12-25 22:04:11.094773 - 0.WriterThread Starting
-2018-12-25 22:04:11.094716 - Got New Connection from('127.0.0.1', 57743)
-2018-12-25 22:04:11.132317 - 0.ReaderThread Starting
+2018-12-25 23:22:10.925898 - Got New Connection from('127.0.0.1', 58350)
+2018-12-25 23:22:10.925936 - 0.ReaderThread Starting
+2018-12-25 23:22:10.954254 - 0.WriterThread Starting
+2018-12-25 23:22:15.942659 - Got New Connection from('127.0.0.1', 58352)
+2018-12-25 23:22:15.954989 - 1.ReaderThread Starting
+2018-12-25 23:22:15.954958 - 1.WriterThread Starting
