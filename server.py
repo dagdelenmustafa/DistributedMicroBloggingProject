@@ -17,6 +17,7 @@ import hashlib
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QThread
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
 from PyQt5.uic import loadUi
 
@@ -29,6 +30,8 @@ from PyQt5.uic import loadUi
 # TODO: Yayınlama protokolü yapılacak
 
 #CONDITIONS
+from mainwindow3_ui import Ui_MainWindow
+
 new_user = "0"
 new_subscribe_request = "1"
 
@@ -171,7 +174,7 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
                         connections[peer_username] = [message_queue, connection]
                         peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
                         message_queue.put("HEL " + peer_username + "\n")
-                        refresh_ui_queue.put(new_user)
+                        refresh_ui_queue.put(new_user + ":" + peer_username)
                     else:
                         message_queue.put("ERR\n")
                 else:
@@ -387,8 +390,97 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
 
     def refreshUI(self):
+        self.qt_app = QtWidgets.QApplication(['Hello'])
+        # print(type(sys.argv))
+        QtWidgets.QWidget.__init__(self, None)
+
+        # create the main ui
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+
+        self.ui.btn_publish_blog.pressed.connect(self.publish_blog)
+        self.ui.btn_get_my_blog.pressed.connect(self.get_my_blogs)
+
+
+        self.ui.lw_peer_list.clicked.connect(self.peer_list_on_click)
+
+        self.refresh_thread = RefreshThread()
+        self.refresh_thread.ready_refresh.connect(self.on_UI_ready)
+        self.refresh_thread.start()
+
+
+
+    def on_UI_ready(self, data):
+        data = data.split(":", 1)
+        if data[0] == new_user:
+            model = QStandardItemModel(self.ui.lw_peer_list)
+            item = QStandardItem()
+            item.setText(data[1])
+            item.setEditable(False)
+            item.setData(data[1])
+            model.appendRow(item)
+
+            self.ui.lw_peer_list.setModel(model)
+            self.ui.lw_peer_list.show()
+
+    def publish_blog(self):
+        blog_text = self.ui.et_publish_blog.toPlainText()
+        self.ui.et_publish_blog.setPlainText("")
+        openfile = "app_data/" + self.my_username + ".txt"
+        f = open(openfile, 'a+')
+        f.write(blog_text + "\n")
+        f.close()
+        m = hashlib.md5()
+        m.update((blog_text + " " + str(datetime.now())).encode())
+        self.my_hash = m.hexdigest()
+        for i in range(self.my_subscribers.__len__()):
+            peer = self.peer_list.get(self.my_subscribers[i], "NULL")
+            if peer != "NULL":
+                s = socket.socket()
+                print(peer[0])
+                print(peer[1])
+                s.connect((peer[0], int(peer[1])))
+                s.send(self.USRString.encode)
+                message = "PSH " + blog_text
+                s.send(message.encode())
+                s.close()
+            else:
+                print("NULL VAR")
+
+    def get_my_blogs(self):
+        fid = open("app_data/" + self.my_username + ".txt", 'r')
+        model = QStandardItemModel(self.ui.lw_blogs)
+
+        for line in fid:
+            item = QStandardItem()
+            item.setText(line)
+            item.setEditable(False)
+            model.appendRow(item)
+        fid.close()
+        self.ui.lw_blogs.setModel(model)
+        self.ui.lw_blogs.show()
+
+    def peer_list_on_click(self):
+        self.clicked_user_name = self.ui.lw_peer_list.selectedIndexes()[0].data()
+        self.ui.btn_subscribe_user.setEnabled(True)
+        self.ui.btn_block_user.setEnabled(True)
+        self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
+        self.ui.btn_block_user.pressed.connect(self.block_user)
+
+    def subscribe_user(self):
+        peer = self.peer_list.get(self.clicked_user_name, "NULL")
+        print(str(peer))
+
+    def block_user(self):
+        print(self.clicked_user_name)
+
+    def run(self):
+        self.show()
+        self.qt_app.exec_()
+
+'''
         global widget
-        loadUi('mainwindow2.ui', self)
+        loadUi('Denemeler/mainwindow3.ui', self)
         self.setWindowTitle('Deneme')
         # Container Widget
 
@@ -471,15 +563,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 s.close()
             else:
                 print("NULL VAR")
-        '''
-        for k, v in self.my_subscribers.items():
-            s = socket.socket()
-            s.connect((v[0], v[1]))
-            s.send(self.USRString.encode)
-            message = "PSH " + blog_text
-            s.send(message.encode())
-            s.close()
-        '''
+    '''
 
 
 class RefreshThread(QThread):
@@ -615,8 +699,8 @@ def main():
                                     my_username, my_type, my_subscribers, my_subscribe_request,
                                     subscribed_peers, black_list,
                                     sended_subscribe_request, peer_list_that_block_me, my_hash)
+    qt_and_client.run()
     app.exec_()
-
 
 
 if __name__ == "__main__":
