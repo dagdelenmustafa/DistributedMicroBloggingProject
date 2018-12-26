@@ -47,14 +47,14 @@ def create_rsa_pair():
 
     # get the public key and show it
     public_key = new_key.publickey()
-    print(public_key.exportKey("PEM"))
+    publicKey=public_key.exportKey("PEM")
 
 
     # get the private key and print
     # private key is given directly with the pair handle
     private_key = new_key
 
-    print(new_key.exportKey("PEM"))
+    privateKey=new_key.exportKey("PEM")
 
 
     # write to files
@@ -65,8 +65,8 @@ def create_rsa_pair():
     f = open('app_data/rsa_public.txt','w')
     f.write(public_key.exportKey().decode())
     f.close()
-
-
+    
+    return publicKey,privateKey
 
 
 def signal_handler(connections, signal, frame):
