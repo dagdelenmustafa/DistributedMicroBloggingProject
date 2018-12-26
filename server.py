@@ -21,6 +21,8 @@ from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
 from PyQt5.uic import loadUi
 
+from Cryptodome.PublicKey import RSA
+from Cryptodome import Random
 
 
 # TODO: Arayüz Ayrıntıları yapılacak
@@ -35,6 +37,34 @@ from mainwindow3_ui import Ui_MainWindow
 new_user = "0"
 new_subscribe_request = "1"
 
+
+
+def create_rsa_pair():
+    random_generator = Random.new().read
+
+    # new key pair generation
+    new_key = RSA.generate(2048, randfunc=random_generator)
+
+    # get the public key and show it
+    public_key = new_key.publickey()
+    print(public_key.exportKey("PEM"))
+
+
+    # get the private key and print
+    # private key is given directly with the pair handle
+    private_key = new_key
+
+    print(new_key.exportKey("PEM"))
+
+
+    # write to files
+    f = open('app_data/rsa_private.txt','w')
+    f.write(private_key.exportKey().decode())
+    f.close()
+
+    f = open('app_data/rsa_public.txt','w')
+    f.write(public_key.exportKey().decode())
+    f.close()
 
 
 
