@@ -24,6 +24,7 @@ from PyQt5.uic import loadUi
 from Cryptodome.PublicKey import RSA
 from Cryptodome import Random
 
+from uuid import getnode as get_mac
 
 # TODO: Arayüz Ayrıntıları yapılacak
 # TODO: Belirli aralıklarla Arayüzün yenilenmesi sağlanacak
@@ -32,12 +33,15 @@ from Cryptodome import Random
 # TODO: Yayınlama protokolü yapılacak
 
 #CONDITIONS
-from mainwindow3_ui import Ui_MainWindow
+from mainwindow_ui import Ui_MainWindow
 
 new_user = "0"
 new_subscribe_request = "1"
 
-
+#PC'nin MAC adresini getir.
+mac = get_mac()
+#UUID üret
+uuid.uuid4()
 
 def create_rsa_pair():
     random_generator = Random.new().read
