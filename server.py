@@ -281,12 +281,17 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
                 message_queue.put("BLC\n")
             else:
                 if peer_username != "NULL":
-                    print(peer_username)
-                    my_subscribe_request.append(peer_username)
-                    refresh_ui_queue.put(new_subscribe_request)
+                   
+                    message_text = receivedObject[1]
+                    all_messages.append(message_text)
+                    receivedObject_splited = receivedObject[1].split(" ", 3)
+                    refresh_ui_queue.put(new_message + ":" +receivedObject[0])
+                    fid = open("app_data/messages.txt", 'a+')
+                    fid.write(message_text + "\n")
+                    fid.close()
+                    message_queue.put("MOK "+ peer_username +"\n")
                 else:
-                    message_queue.put("ERL\n")
-
+                    message_queue.put("ERL "+ peer_username +"\n")
 
 
         elif receivedObject[0] == "SBO" and receivedObject.__len__() == 1:
