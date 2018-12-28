@@ -374,22 +374,29 @@ def readAndParse(connection, connections, message_queue, peer_list, terminateThr
 
 
 class WriterThread(threading.Thread):
-    def __init__(self, connection, addr, name, connections, loggerQueue, messageQueue, peer_list, terminateThread):
-        threading.Thread.__init__(self)
+    def _init_(self, connection, addr, name, connections, logger_queue, message_queue, peer_list, terminateThread,
+                 my_username, my_ip, my_port, my_hash, my_type):
+        threading.Thread._init_(self)
         self.connection = connection
         self.addr = addr
         self.name = name
         self.connections = connections
-        self.loggerQueue = loggerQueue
-        self.messageQueue = messageQueue
+        self.message_queue = message_queue
+        self.logger_queue = logger_queue
         self.peer_list = peer_list
         self.terminateThread = terminateThread
+        self.my_username = my_username
+        self.my_ip = my_ip
+        self.my_port = my_port
+        self.my_hash = my_hash
+        self.my_type = my_type
+        self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
 
-    def run(self):
-        self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Starting")
-        writeMessage(self.connection, self.messageQueue, self.terminateThread)
-        self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Exiting")
-
+				  
+ def run(self):
+        self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Starting")
+        self.writeMessage()
+        self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Exiting")
 
 def writeMessage(connection, message_queue, terminateThread):
     while not terminateThread:
