@@ -459,11 +459,10 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
         self.refreshUI()
 
-
     def refreshUI(self):
         self.qt_app = QtWidgets.QApplication(['Hello'])
         # print(type(sys.argv))
-        QtWidgets.QWidget.__init__(self, None)
+        # QtWidgets.QWidget._init_(self, None)
 
         # create the main ui
         self.ui = Ui_MainWindow()
@@ -471,13 +470,95 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
         self.ui.btn_publish_blog.pressed.connect(self.publish_blog)
         self.ui.btn_get_my_blog.pressed.connect(self.get_my_blogs)
-        self.model = QStandardItemModel(self.ui.lw_peer_list)
+        self.ui.btn_reload_messagebox.pressed.connect(self.reload_messagebox)
+        self.ui.btn_send_message.pressed.connect(self.send_message)
+        self.ui.btn_login.pressed.connect(self.login)
+        self.ui.cb_message_to.activated.connect(self.message_to_selected)
 
         self.ui.lw_peer_list.clicked.connect(self.peer_list_on_click)
+        self.ui.lw_inbox.clicked.connect(self.messagebox_on_click)
+        self.ui.lw_requests.clicked.connect(self.request_on_click)
+        self.load_lasted_blogs()
+        self.load_lasted_peers()
+        self.load_lasted_messages()
+        self.load_subscribers()
 
         self.refresh_thread = RefreshThread()
         self.refresh_thread.ready_refresh.connect(self.on_UI_ready)
         self.refresh_thread.start()
+
+
+
+    def login(self):
+        self.my_ip = self.ui.et_my_ip.toPlainText()
+        self.my_port = self.ui.et_my_port.toPlainText()
+        self.peer_ip = self.ui.et_peer_ip.toPlainText()
+        self.peer_port = self.ui.et_peer_port.toPlainText()
+        self.USRString = "USR " + str(self.my_username) + " " + str(self.my_ip) + " " + str(self.my_port) + " " + str(self.my_hash) + " " + str(self.my_type)
+
+        s = socket.socket()
+        s.connect((self.peer_ip, int(self.peer_port)))
+        s.send(self.USRString.encode())
+        time.sleep(1)
+        s.close()
+
+    def load_lasted_blogs(self):
+        #MyBlogs Loaded
+        model = QStandardItemModel(self.ui.lw_blogs)
+        self.i = 0
+        for line in self.my_blogs:
+            item = QStandardItem()
+            item.setText(line)
+            item.setEditable(False)
+            if self.i == 0:
+                item.setBackground(QColor("#666666"))
+            model.appendRow(item)
+            self.i = self.i + 1
+        self.ui.lw_blogs.setModel(model)
+        self.ui.lw_blogs.show()
+
+
+    def load_lasted_peers(self):
+        print("içerde")
+        #PeerList_Loaded
+        model = QStandardItemModel(self.ui.lw_peer_list)
+        print(self.peer_list)
+        for k, v in self.peer_list.items():
+            item = QStandardItem()
+            item.setText(k)
+            item.setEditable(False)
+            model.appendRow(item)
+            self.ui.cb_message_to.addItem(k)
+        self.ui.lw_peer_list.setModel(model)
+        self.ui.lw_peer_list.show()
+
+    def load_lasted_messages(self):
+        #Message_list_loaded
+        model = QStandardItemModel(self.ui.lw_inbox)
+        for line in self.all_messages:
+            line = line.split(" ", 3)
+            if line[0] == self.my_username and line[1] not in self.message_list:
+                self.message_list.append(line[1])
+            elif line[0] not in self.message_list and line[0] != self.my_username:
+                self.message_list.append(line[0])
+
+        for line in self.message_list:
+            item = QStandardItem()
+            item.setText(line)
+            item.setEditable(False)
+            model.appendRow(item)
+        self.ui.lw_inbox.setModel(model)
+        self.ui.lw_inbox.show()
+
+    def load_subscribers(self):
+        model = QStandardItemModel(self.ui.lw_my_subscribers)
+        for i in self.my_subscribers:
+            item = QStandardItem()
+            item.setText(i)
+            item.setEditable(False)
+            model.appendRow(item)
+        self.ui.lw_my_subscribers.setModel(model)
+        self.ui.lw_my_subscribers.show()
 
 
 
@@ -538,6 +619,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.lw_peer_list.setModel(self.model)
             self.ui.lw_peer_list.show()
 
+
     def publish_blog(self):
         blog_text = self.ui.et_publish_blog.toPlainText()
         self.ui.et_publish_blog.setPlainText("")
@@ -548,14 +630,15 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         m = hashlib.md5()
         m.update((blog_text + " " + str(datetime.now())).encode())
         self.my_hash = m.hexdigest()
-        for i in range(self.my_subscribers.__len__()):
-            peer = self.peer_list.get(self.my_subscribers[i], "NULL")
+        for i in self.my_subscribers:
+            peer = self.peer_list.get(i, "NULL")
             if peer != "NULL":
                 s = socket.socket()
                 print(peer[0])
                 print(peer[1])
                 s.connect((peer[0], int(peer[1])))
-                s.send(self.USRString.encode)
+                s.send(self.USRString.encode())
+                time.sleep(1)
                 message = "PSH " + blog_text
                 s.send(message.encode())
                 s.close()
@@ -565,12 +648,15 @@ class QtSideAndClient(QtWidgets.QMainWindow):
     def get_my_blogs(self):
         fid = open("app_data/" + self.my_username + ".txt", 'r')
         model = QStandardItemModel(self.ui.lw_blogs)
-
+        self.i = 0
         for line in fid:
             item = QStandardItem()
             item.setText(line)
             item.setEditable(False)
+            if self.i == 0:
+                item.setBackground(QColor("#666666"))
             model.appendRow(item)
+            self.i = self.i + 1
         fid.close()
         self.ui.lw_blogs.setModel(model)
         self.ui.lw_blogs.show()
@@ -606,10 +692,15 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             print(peer[0])
             print(peer[1])
             s.connect((peer[0], int(peer[1])))
-            s.send(self.USRString.encode)
+            s.send(self.USRString.encode())
+            time.sleep(1)
+            print(self.peer_list)
             message = "SBS"
             s.send(message.encode())
             s.close()
+            fid = open("app_data/sended_subscribe_request.txt", "a+")
+            fid.write(self.clicked_user_name + "\n")
+            fid.close()
             self.sended_subscribe_request.append(self.clicked_user_name)
 
         else:
@@ -623,7 +714,8 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             print(peer[0])
             print(peer[1])
             s.connect((peer[0], int(peer[1])))
-            s.send(self.USRString.encode)
+            s.send(self.USRString.encode())
+            time.sleep(1)
             message = "BLU"
             s.send(message.encode())
             s.close()
@@ -631,6 +723,98 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.btn_block_user.setText("Engellendi")
         else:
             print("NULL VAR")
+
+    def reload_messagebox(self):
+        self.load_lasted_messages()
+        self.ui.btn_reload_messagebox.setEnabled(False)
+
+
+    def messagebox_on_click(self):
+        if not self.ui.btn_reload_messagebox.isEnabled():
+            self.clicked_message_user_name = self.ui.lw_inbox.selectedIndexes()[0].data()
+        model = QStandardItemModel(self.ui.lw_inbox)
+        for line in self.all_messages:
+            line = line.split(" ", 4)
+            print(self.my_username)
+            print(self.clicked_message_user_name)
+            if line[0] == self.my_username and line[1] == self.clicked_message_user_name:
+                item = QStandardItem()
+                item.setText(line[2] + line[3] + " : " + line[0] + " => " +line[4])
+                item.setBackground(QColor("#666666"))
+                item.setSelectable(False)
+                item.setEditable(False)
+                model.appendRow(item)
+            elif line[0] == self.clicked_message_user_name and line[1] == self.my_username:
+                item = QStandardItem()
+                item.setText(line[2] + line[3] + " : " + line[0] + " => " +line[4])
+                item.setEditable(False)
+                item.setSelectable(False)
+                model.appendRow(item)
+            else:
+                continue
+        self.ui.lw_inbox.setModel(model)
+        self.ui.lw_inbox.show()
+        self.ui.btn_reload_messagebox.setEnabled(True)
+        if self.ui.btn_reload_messagebox.isEnabled():
+            self.message_to_selected_index = list(self.peer_list.keys()).index(self.clicked_message_user_name)
+            self.ui.cb_message_to.setCurrentIndex(self.message_to_selected_index)
+
+    def request_on_click(self):
+        self.clicked_user_name = self.ui.lw_requests.selectedIndexes()[0].data()
+        index_selectedLine=self.ui.lw_requests.selectedIndexes()[0]
+        if self.clicked_user_name in self.black_list:
+            self.ui.btn_accept_request.setText("Engellendi")
+        else:
+            self.ui.btn_accept_request.setEnabled(True)
+            self.ui.btn_accept_request.pressed.connect(self.add_new_subscribe)
+
+    def message_to_selected(self):
+        self.message_to_selected_index = self.ui.cb_message_to.currentIndex()
+
+    def add_new_subscribe(self):
+        print("bastın")
+        self.my_subscribers.append(self.clicked_user_name)
+        index = self.my_subscribe_request.index(self.clicked_user_name)
+        del self.my_subscribe_request[index]
+        print(self.clicked_user_name)
+        refresh_ui_queue.put(new_subscribe + ":" + self.clicked_user_name)
+        peer = self.peer_list.get(self.clicked_user_name, "NULL")
+        print(peer)
+        fid = open("app_data/my_subscribers.txt", "a+")
+        fid.write(str(self.clicked_user_name) + "\n")
+        fid.close()
+        fid = open("app_data/my_subscribe_request.txt", "w+")
+        d = fid.readlines()
+        for i in d:
+            if i != self.clicked_user_name:
+                fid.write(i + "\n")
+        fid.close()
+        s = socket.socket()
+        s.connect((peer[0], int(peer[1])))
+        s.send(self.USRString.encode())
+        time.sleep(1)
+        s.send("SBO".encode())
+        s.close()
+
+    def send_message(self):
+        peer = self.peer_list.get(list(self.peer_list.keys())[self.message_to_selected_index], "NULL")
+        if peer != "NULL":
+            s = socket.socket()
+            print(peer[0])
+            print(peer[1])
+            s.connect((peer[0], int(peer[1])))
+            s.send(self.USRString.encode())
+            time.sleep(1)
+            message = "MSG " + self.my_username + " " + list(self.peer_list.keys())[self.message_to_selected_index] + " " + str(datetime.now()) + " " + self.ui.et_write_msg.toPlainText()
+            s.send(message.encode())
+            s.close()
+            fid = open("app_data/messages.txt", "a+")
+            fid.write(message[4:] + "\n")
+            fid.close()
+        else:
+            print("NULL VAR")
+
+
 
     def run(self):
         self.show()
@@ -824,47 +1008,47 @@ def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_reque
           splitted_line = yaml.load(line[1])
           peer_list[line[0]] = [splitted_line[0], splitted_line[1], splitted_line[2], splitted_line[3], splitted_line[4], splitted_line[5]]
           print("peerlist in load" + str(peer_list))
-          fid.close()
+      fid.close()
       
       fid = open("app_data/" + my_username + ".txt", 'r')
       for line in fid:
           my_blogs.append(line)
-          fid.close()
+      fid.close()
       
       fid = open("app_data/messages.txt", 'r')
       for line in fid:
           all_messages.append(line)
-          fid.close()
+      fid.close()
       
       fid = open("app_data/my_subscribers.txt", 'r')
       for line in fid:
           my_subscribers.append(line)
-          fid.close()
+      fid.close()
       
       fid = open("app_data/sended_subscribe_request.txt", 'r')
       for line in fid:
           sended_subscribe_request.append(line)
-          fid.close()
+      fid.close()
       
       fid = open("app_data/my_subscribe_request.txt", 'r')
       for line in fid:
           my_subscribe_request.append(line)
-          fid.close()
+      fid.close()
 
       fid = open("app_data/subscribed_peers.txt", 'r')
       for line in fid:
           subscribed_peers.append(line)
-          fid.close()
+      fid.close()
       
       fid = open("app_data/black_list.txt", 'r')
       for line in fid:
           black_list.append(line)
-          fid.close()
+      fid.close()
 
       fid = open("app_data/peer_list_that_block_me.txt", 'r')
       for line in fid:
           peer_list_that_block_me.append(line)
-          fid.close()
+      fid.close()
 
 def create_app_data(my_username):
     open("app_data/" + my_username + ".txt", 'a').close()
@@ -940,11 +1124,11 @@ def main():
     if not os.path.isfile('peer_keys/'+my_username+'_private_key.txt') and not os.path.isfile('peer_keys/'+my_username+'_public_key.txt'):
         create_rsa_pair(my_username)
 
-    if not os.path.isfile('app_data/' + my_username + '.txt') and not os.path.isfile('app_data/black_list.txt')\
-            and not os.path.isfile('app_data/messages.txt') and not os.path.isfile('app_data/my_subscribe_request.txt')\
-            and not os.path.isfile('app_data/my_subscribers.txt') and not os.path.isfile('app_data/peer_list.txt')\
-            and not os.path.isfile('app_data/peer_list_that_block_me.txt') and not os.path.isfile('app_data/sended_subscribe_request.txt')\
-            and not os.path.isfile('app_data/subscribed_peers.txt'):
+    if os.path.isfile('app_data/' + my_username + '.txt') and os.path.isfile('app_data/black_list.txt')\
+            and os.path.isfile('app_data/messages.txt') and os.path.isfile('app_data/my_subscribe_request.txt')\
+            and os.path.isfile('app_data/my_subscribers.txt') and os.path.isfile('app_data/peer_list.txt')\
+            and os.path.isfile('app_data/peer_list_that_block_me.txt') and os.path.isfile('app_data/sended_subscribe_request.txt')\
+            and os.path.isfile('app_data/subscribed_peers.txt'):
         load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
                           subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs)
     else:

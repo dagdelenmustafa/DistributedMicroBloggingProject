@@ -3,15 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1736141c-33d1-475c-bf8b-13abea8e3395" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/black_list.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/messages.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/my_subscribe_request.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/my_subscribers.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/peer_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app_data/peer_list.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/peer_list_that_block_me.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/sended_subscribe_request.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_data/subscribed_peers.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app_data/mac.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app_data/mac.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -23,7 +15,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme2.coverage" NAME="deneme2 Coverage Results" MODIFIED="1543936847679" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme__1_.coverage" NAME="deneme (1) Coverage Results" MODIFIED="1545923490253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Denemeler" />
-    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1546721365865" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1546724260736" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$folder.coverage" NAME="folder Coverage Results" MODIFIED="1545230726975" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="/usr/local/lib/python3.7/site-packages/torchvision/datasets" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$transfer_learning_tutorial.coverage" NAME="transfer_learning_tutorial Coverage Results" MODIFIED="1545258214923" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$dataSetCreator.coverage" NAME="dataSetCreator Coverage Results" MODIFIED="1545244097026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Dropbox/4-Python/FaceDetection" />
@@ -35,20 +27,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/server.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="202">
-              <caret line="877" selection-start-line="877" selection-end-line="877" />
+            <state relative-caret-position="177">
+              <caret line="1034" column="43" lean-forward="true" selection-start-line="1034" selection-start-column="43" selection-end-line="1034" selection-end-column="43" />
               <folding>
                 <element signature="e#19#28#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app_data/peer_list.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
             </state>
           </provider>
         </entry>
@@ -73,7 +56,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>msg</find>
       <find>mustafa</find>
       <find>USRString</find>
       <find>recv</find>
@@ -103,6 +85,7 @@
       <find>readand</find>
       <find>open</find>
       <find>New_Peer_Thread</find>
+      <find>v,k</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -331,23 +314,23 @@
       <workItem from="1545080268753" duration="26817000" />
       <workItem from="1545653828392" duration="82338000" />
       <workItem from="1546161133749" duration="2215000" />
-      <workItem from="1546714577342" duration="6052000" />
+      <workItem from="1546714577342" duration="7710000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="170963000" />
+    <option name="totallyTimeSpent" value="172621000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.27825466" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.27825466" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32891566" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.7474964" visible="true" weight="0.32891566" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.7474964" visible="true" weight="0.32891566" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -541,8 +524,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/server.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
-          <caret line="877" selection-start-line="877" selection-end-line="877" />
+        <state relative-caret-position="177">
+          <caret line="1034" column="43" lean-forward="true" selection-start-line="1034" selection-start-column="43" selection-end-line="1034" selection-end-column="43" />
           <folding>
             <element signature="e#19#28#0" expanded="true" />
           </folding>
