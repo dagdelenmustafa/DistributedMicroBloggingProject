@@ -107,7 +107,7 @@ class New_Peer_Thread(threading.Thread):
 
 class ReaderThread(threading.Thread):
     def __init__(self, my_username, connection, addr, name, connections, logger_queue,
-                 message_queue, peerList, terminateThread, my_subscribers,
+                 message_queue, peer_list, terminateThread, my_subscribers,
                  black_list, my_subscribe_request, sended_subscribe_request,
                  subscribed_peers, peer_list_that_block_me, all_messages):
         threading.Thread.__init__(self)
@@ -118,7 +118,7 @@ class ReaderThread(threading.Thread):
         self.connections = connections
         self.logger_queue = logger_queue
         self.message_queue = message_queue
-        self.peerList = peerList
+        self.peer_list = peer_list
         self.terminateThread = terminateThread
         self.my_subscribers = my_subscribers
         self.black_list = black_list
@@ -131,10 +131,10 @@ class ReaderThread(threading.Thread):
     def run(self):
         print(self.connection)
         print(self.addr)
-        self.loggerQueue.put(str(datetime.now()) + " - Got New Connection from" + str(self.addr))
-        self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Starting")
+        self.logger_queue.put(str(datetime.now()) + " - Got New Connection from" + str(self.addr))
+        self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Starting")
         self.readAndParse()
-        self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Exiting")
+        self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Exiting")
 
     def readAndParse(self):
         global terminate_all_thread, widget
@@ -186,7 +186,8 @@ class ReaderThread(threading.Thread):
                             self.connections[peer_username] = [self.message_queue, self.connection]
                             self.peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()),
                                                              "ON"]
-                            self.message_queue.put("HEL " + peer_username + "\n")
+                            print(self.peer_list[peer_username])
+                            self.message_queue.put("HEL " + peer_username + " " + peer_ip + " " + peer_port + "\n")
                             refresh_ui_queue.put(new_user + ":" + peer_username)
                         else:
                             self.message_queue.put("ERR\n")
@@ -209,7 +210,7 @@ class ReaderThread(threading.Thread):
             elif receivedObject[0] == "HEO":
                 self.peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
 
-                fid = open("app_data/self.peer_list.txt", 'a+')
+                fid = open("app_data/peer_list.txt", 'a+')
                 fid.write(peer_username + ":" + str(self.peer_list[peer_username]) + "\n")
                 fid.close()
                 refresh_ui_queue.put(new_user + ":" + peer_username)
@@ -372,9 +373,9 @@ class ReaderThread(threading.Thread):
 
 
 class WriterThread(threading.Thread):
-    def _init_(self, connection, addr, name, connections, logger_queue, message_queue, peer_list, terminateThread,
+    def __init__(self, connection, addr, name, connections, logger_queue, message_queue, peer_list, terminateThread,
                  my_username, my_ip, my_port, my_hash, my_type):
-        threading.Thread._init_(self)
+        threading.Thread.__init__(self)
         self.connection = connection
         self.addr = addr
         self.name = name
@@ -526,6 +527,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.requests.setEnabled(True)
             self.ui.peerlist.setEnabled(True)
             self.ui.home.setEnabled(True)
+
         if data[0] == new_user:
             item = QStandardItem()
             item.setText(data[1])
@@ -816,7 +818,7 @@ class ServerThread(threading.Thread):
 
 def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
                         subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs):
-      fid = open("app_data/peer_list.txt", 'a+')
+      fid = open("app_data/peer_list.txt", 'r')
       for line in fid:
           line = line.split(":", 1)
           splitted_line = yaml.load(line[1])
@@ -824,45 +826,57 @@ def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_reque
           print("peerlist in load" + str(peer_list))
           fid.close()
       
-      fid = open("app_data/" + my_username + ".txt", 'a+')
+      fid = open("app_data/" + my_username + ".txt", 'r')
       for line in fid:
           my_blogs.append(line)
           fid.close()
       
-      fid = open("app_data/messages.txt", 'a+')
+      fid = open("app_data/messages.txt", 'r')
       for line in fid:
           all_messages.append(line)
           fid.close()
       
-      fid = open("app_data/my_subscribers.txt", 'a+')
+      fid = open("app_data/my_subscribers.txt", 'r')
       for line in fid:
           my_subscribers.append(line)
           fid.close()
       
-      fid = open("app_data/sended_subscribe_request.txt", 'a+')
+      fid = open("app_data/sended_subscribe_request.txt", 'r')
       for line in fid:
           sended_subscribe_request.append(line)
           fid.close()
       
-      fid = open("app_data/my_subscribe_request.txt", 'a+')
+      fid = open("app_data/my_subscribe_request.txt", 'r')
       for line in fid:
           my_subscribe_request.append(line)
           fid.close()
 
-      fid = open("app_data/subscribed_peers.txt", 'a+')
+      fid = open("app_data/subscribed_peers.txt", 'r')
       for line in fid:
           subscribed_peers.append(line)
           fid.close()
       
-      fid = open("app_data/black_list.txt", 'a+')
+      fid = open("app_data/black_list.txt", 'r')
       for line in fid:
           black_list.append(line)
           fid.close()
 
-      fid = open("app_data/peer_list_that_block_me.txt", 'a+')
+      fid = open("app_data/peer_list_that_block_me.txt", 'r')
       for line in fid:
           peer_list_that_block_me.append(line)
           fid.close()
+
+def create_app_data(my_username):
+    open("app_data/" + my_username + ".txt", 'a').close()
+    open("app_data/black_list.txt", 'a').close()
+    open('app_data/messages.txt', 'a').close()
+    open('app_data/my_subscribe_request.txt', 'a').close()
+    open('app_data/peer_list_that_block_me.txt', 'a').close()
+    open('app_data/my_subscribers.txt', 'a').close()
+    open('app_data/peer_list.txt', 'a').close()
+    open('app_data/sended_subscribe_request.txt', 'a').close()
+    open('app_data/subscribed_peers.txt', 'a').close()
+
 
 def create_rsa_pair(my_username):
     random_generator = Random.new().read
@@ -912,7 +926,7 @@ def main():
     signal.signal(signal.SIGINT, partial(signal_handler, connections))
 
     #my_ip = requests.get('http://ip.42.pl/raw').text
-    my_ip = "192.168.43.207"#socket.gethostbyname(socket.gethostname())
+    my_ip = socket.gethostbyname(socket.gethostname())
     print(my_ip)
     my_port = 12344
     #my_username = str(uuid.NAMESPACE_DNS.hex)
@@ -926,8 +940,16 @@ def main():
     if not os.path.isfile('peer_keys/'+my_username+'_private_key.txt') and not os.path.isfile('peer_keys/'+my_username+'_public_key.txt'):
         create_rsa_pair(my_username)
 
-    load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
-                    subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs)
+    if not os.path.isfile('app_data/' + my_username + '.txt') and not os.path.isfile('app_data/black_list.txt')\
+            and not os.path.isfile('app_data/messages.txt') and not os.path.isfile('app_data/my_subscribe_request.txt')\
+            and not os.path.isfile('app_data/my_subscribers.txt') and not os.path.isfile('app_data/peer_list.txt')\
+            and not os.path.isfile('app_data/peer_list_that_block_me.txt') and not os.path.isfile('app_data/sended_subscribe_request.txt')\
+            and not os.path.isfile('app_data/subscribed_peers.txt'):
+        load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
+                          subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs)
+    else:
+        create_app_data(my_username)
+
     s = socket.socket()
     host = "0.0.0.0"
     port = 12344
