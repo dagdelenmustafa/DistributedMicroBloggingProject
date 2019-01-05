@@ -11,7 +11,6 @@ from datetime import datetime, time
 import time
 
 import yaml
-import requests
 import uuid
 import hashlib
 
@@ -19,10 +18,6 @@ import hashlib
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QColor
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
-from PyQt5.uic import loadUi
-from Cryptodome.PublicKey import RSA
-from Cryptodome import Random
 from uuid import getnode as get_mac
 from Cryptodome.PublicKey import RSA
 from Cryptodome import Random
@@ -188,7 +183,7 @@ class ReaderThread(threading.Thread):
                                                              "ON"]
                             print(self.peer_list[self.peer_username])
                             self.message_queue.put("HEL " + self.peer_username + " " + self.peer_ip + " " + self.peer_port + "\n")
-                            refresh_ui_queue.put(self.new_user + ":" + self.peer_username)
+                            refresh_ui_queue.put(new_user + ":" + self.peer_username)
                         else:
                             self.message_queue.put("ERR\n")
                     else:
@@ -197,7 +192,6 @@ class ReaderThread(threading.Thread):
                         else:
                             print("User Login")
                             self.peer_username = received_object_for_new_user[0]
-                            self.connections[self.peer_username] = [self.message_queue, self.connection]
                             # Signature ile kontrol yapılabilir.
                 else:
                     self.message_queue.put("ERR\n")
@@ -246,20 +240,20 @@ class ReaderThread(threading.Thread):
 
 
             elif receivedObject[0] == "MSG" and receivedObject.__len__() > 1:
-                if self.peer_username in black_list:
+                if self.peer_username in self.black_list:
                     self.message_queue.put("BLC " + self.peer_username + "\n")
                 else:
                     if self.peer_username != "NULL":
                         message_text = receivedObject[1]
-                        all_messages.append(message_text)
+                        self.all_messages.append(message_text)
                         receivedObject_splited = receivedObject[1].split(" ", 3)
                         refresh_ui_queue.put(new_message + ":" + receivedObject[0])
                         fid = open("app_data/messages.txt", 'a+')
                         fid.write(message_text + "\n")
                         fid.close()
-                        self.message_queue.put("MOK " + peer_username + "\n")
+                        self.message_queue.put("MOK " + self.peer_username + "\n")
                     else:
-                        self.message_queue.put("ERL " + peer_username + "\n")
+                        self.message_queue.put("ERL " + self.peer_username + "\n")
 
 
 
@@ -267,7 +261,7 @@ class ReaderThread(threading.Thread):
                 if self.peer_username in self.black_list:
                     self.message_queue.put("BLC" + self.peer_username + "\n")
                 else:
-                    if peer_username != "NULL":
+                    if self.peer_username != "NULL":
                         print(self.peer_username)
                         self.my_subscribe_request.append(self.peer_username)
                         refresh_ui_queue.put(new_subscribe_request + ":" + self.peer_username)
@@ -334,7 +328,7 @@ class ReaderThread(threading.Thread):
                     self.message_queue.put("BYE " + self.peer_username + "\n")
                     for k, v in self.connections.items():
                         v[0].put("SYS " + self.peer_username + " has left.\n")
-                    self.connections.pop(self.peer_username)
+                    self.connections.pop(peer_username)
                 else:
                     self.message_queue.put("BYE\n")
                 print("Ending with QUI" + str(threading.enumerate()))
@@ -728,8 +722,6 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         model = QStandardItemModel(self.ui.lw_inbox)
         for line in self.all_messages:
             line = line.split(" ", 4)
-            print(self.my_username)
-            print(self.clicked_message_user_name)
             if line[0] == self.my_username and line[1] == self.clicked_message_user_name:
                 item = QStandardItem()
                 item.setText(line[2] + line[3] + " : " + line[0] + " => " +line[4])
