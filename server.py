@@ -21,11 +21,12 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton
 from PyQt5.uic import loadUi
-
+from Cryptodome.PublicKey import RSA
+from Cryptodome import Random
+from uuid import getnode as get_mac
 from Cryptodome.PublicKey import RSA
 from Cryptodome import Random
 
-from uuid import getnode as get_mac
 
 # TODO: Arayüz Ayrıntıları yapılacak
 # TODO: Belirli aralıklarla Arayüzün yenilenmesi sağlanacak
@@ -34,7 +35,7 @@ from uuid import getnode as get_mac
 # TODO: Yayınlama protokolü yapılacak
 
 #CONDITIONS
-from mainwindow_ui import Ui_MainWindow
+from mainwindow3_ui import Ui_MainWindow
 
 new_user = "0"
 new_subscribe_request = "1"
@@ -49,34 +50,6 @@ mac = get_mac()
 uuid.uuid4()
 
 index_selectedLine=0
-def create_rsa_pair():
-    random_generator = Random.new().read
-
-    # new key pair generation
-    new_key = RSA.generate(2048, randfunc=random_generator)
-
-    # get the public key and show it
-    public_key = new_key.publickey()
-    publicKey=public_key.exportKey("PEM")
-
-
-    # get the private key and print
-    # private key is given directly with the pair handle
-    private_key = new_key
-
-    privateKey=new_key.exportKey("PEM")
-
-
-    # write to files
-    f = open('app_data/rsa_private.txt','w')
-    f.write(private_key.exportKey().decode())
-    f.close()
-
-    f = open('app_data/rsa_public.txt','w')
-    f.write(public_key.exportKey().decode())
-    f.close()
-    
-    return publicKey,privateKey
 
 
 def signal_handler(connections, signal, frame):
@@ -127,24 +100,24 @@ class New_Peer_Thread(threading.Thread):
                 s = socket.socket()
                 s.connect((v[0], int(v[1])))
                 s.send(self.USRString.encode())
-		time.sleep(1)
+                time.sleep(1)
                 s.send(self.message.encode())
                 s.close()
 
 
 class ReaderThread(threading.Thread):
-    def __init__(self,my_username, connection, addr, name, connections, loggerQueue,
-                 messageQueue, peerList, terminateThread, my_subscribers,
+    def __init__(self, my_username, connection, addr, name, connections, logger_queue,
+                 message_queue, peerList, terminateThread, my_subscribers,
                  black_list, my_subscribe_request, sended_subscribe_request,
                  subscribed_peers, peer_list_that_block_me, all_messages):
         threading.Thread.__init__(self)
-	self.my_username = my_username
+        self.my_username = my_username
         self.connection = connection
         self.addr = addr
         self.name = name
         self.connections = connections
-        self.loggerQueue = loggerQueue
-        self.messageQueue = messageQueue
+        self.logger_queue = logger_queue
+        self.message_queue = message_queue
         self.peerList = peerList
         self.terminateThread = terminateThread
         self.my_subscribers = my_subscribers
@@ -153,249 +126,242 @@ class ReaderThread(threading.Thread):
         self.sended_subscribe_request = sended_subscribe_request
         self.subscribed_peers = subscribed_peers
         self.peer_list_that_block_me = peer_list_that_block_me
-	self.all_messages = all_messages
+        self.all_messages = all_messages
 
     def run(self):
         print(self.connection)
         print(self.addr)
         self.loggerQueue.put(str(datetime.now()) + " - Got New Connection from" + str(self.addr))
         self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Starting")
-        self.messageQueue.put("Connected to server\n")
-        readAndParse(self.my_username, self.connection, self.connections, self.messageQueue,
-                     self.peerList, self.terminateThread, self.my_subscribers, self.black_list,
-                     self.my_subscribe_request, self.sended_subscribe_request, self.subscribed_peers,
-                     self.peer_list_that_block_me)
+        self.readAndParse()
         self.loggerQueue.put(str(datetime.now()) + " - " + self.name + " Exiting")
 
+    def readAndParse(self):
+        global terminate_all_thread, widget
+        peer_username = "NULL"
+        err_count = 0
+        while not terminate_all_thread and not self.terminateThread:
+            try:
+                receivedObjects = self.connection.recv(1024).decode()
+                if receivedObjects == "":
+                    self.connection.close()
+                    break
+                    print(receivedObjects)
+            except:
+                print("self.connection Close " + str(self.connection))
+                break
+            receivedObject = receivedObjects.split(" ", 1)
+            receivedObject[0] = receivedObject[0].replace("\n", "")
+            receivedObject[0] = receivedObject[0].replace("\r", "")
 
-def readAndParse(my_username, connection, connections, message_queue, peer_list, terminateThread,
-                 my_subscribers, black_list, my_subscribe_request, sended_subscribe_request,
-                 subscribed_peers, peer_list_that_block_me, all_messages):
-    global terminate_all_thread, widget
-    peer_username = "NULL"
-    err_count = 0
-    while not terminate_all_thread and not terminateThread:
-        try:
-            receivedObjects = connection.recv(1024).decode()
-	    if receivedObjects == "":
-	    	connection.close()
-		break
-	    print(receivedObjects)
-        except:
-            print("Connection Close " + str(connection))
-            break
-        receivedObject = receivedObjects.split(" ", 1)
-        receivedObject[0] = receivedObject[0].replace("\n", "")
-        receivedObject[0] = receivedObject[0].replace("\r", "")
+            print(receivedObject)
+            print(receivedObject.__len__())
+            if receivedObject.__len__() == 2:
+                receivedObject[1] = receivedObject[1].strip()
+                receivedObject[1] = receivedObject[1].replace("\n", "")
+                receivedObject[1] = receivedObject[1].replace("\r", "")
 
-        print(receivedObject)
-        print(receivedObject.__len__())
-        if receivedObject.__len__() == 2:
-            receivedObject[1] = receivedObject[1].strip()
-            receivedObject[1] = receivedObject[1].replace("\n", "")
-            receivedObject[1] = receivedObject[1].replace("\r", "")
+            if receivedObjects == "":
+                err_count = err_count + 1
+                if err_count == 20:
+                    if peer_username != "NULL":
+                        self.connections.pop(peer_username)
+                    print("Ending with counter " + str(threading.enumerate()))
+                    self.message_queue.put("BYE")
+                    self.terminateThread = True
 
-        if receivedObjects == "":
-            err_count = err_count + 1
-            if err_count == 20:
-                if peer_username != "NULL":
-                    connections.pop(peer_username)
-                print("Ending with counter " + str(threading.enumerate()))
-                message_queue.put("BYE")
-                terminateThread = True
-
-
-        if receivedObject[0] == "USR" and receivedObject.__len__() != 6:
-            if receivedObject[1] != "":
-                received_object_for_new_user = receivedObject[1].split(" ")
-                username_check = peer_list.get(received_object_for_new_user[0], "NULL")
-                if username_check == "NULL":
-                    if received_object_for_new_user.__len__() == 5:
-                        print("New User Register")
-                        peer_username = received_object_for_new_user[0]
-                        peer_ip = received_object_for_new_user[1]
-                        peer_port = received_object_for_new_user[2]
-                        peer_hash = received_object_for_new_user[3]
-                        peer_type = received_object_for_new_user[4]
-                        # TODO: boşluk karakteri ile test et
-                        connections[peer_username] = [message_queue, connection]
-                        peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
-                        message_queue.put("HEL " + peer_username + "\n")
-                        refresh_ui_queue.put(new_user + ":" + peer_username)
-                    else:
-                        message_queue.put("ERR\n")
-                else:
-                    if received_object_for_new_user[0] in black_list:
-                        message_queue.put("BLC\n")
-                    else:
-                        print("User Login")
-                        peer_username = received_object_for_new_user[0]
-                        connections[peer_username] = [message_queue, connection]
-                        #Signature ile kontrol yapılabilir.
-            else:
-                message_queue.put("ERR\n")
-
-
-        elif receivedObject[0]=="HEL":
-            message_queue.put("HEO "+ peer_username + " " + peer_ip + " " + peer_port+"\n")
-            refresh_ui_queue(login)
-
-        elif receivedObject[0] == "HEO":
-            peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
-
-            fid = open("app_data/peer_list.txt", 'a+')
-            fid.write(peer_username + ":" + str(peer_list[peer_username]) + "\n")
-            fid.close()
-            refresh_ui_queue.put(new_user + ":" + peer_username)
-            print("New User Register")
-            print(peer_list)
-	
-	elif receivedObject[0] == "LSQ" and receivedObject.__len__() == 1:
-            if peer_username in black_list:
-                message_queue.put("BLC\n")
-            else:
-                if peer_username != "NULL":
-                    message_queue.put("LSA " + str(peer_list) + "\n")
-                else:
-                    message_queue.put("ERL\n")
-
-        elif receivedObject[0] == "LSA":
-            if peer_username != "NULL" and receivedObject.__len__() != 1:
-                received_peer_list = yaml.load(receivedObject[1])
-                for k,v in received_peer_list.items():
-                    if k in peer_list.keys():
-                        continue
-                    else:
-                        print("New User From LSA")
-                        peer_list[k] = v
-
-            else:
-                message_queue.put("ERL\n")
-
-
-
-        elif receivedObject[0] == "TIC" and receivedObject.__len__() == 1:
-            message_queue.put("TOC\n")
-
-
-        elif receivedObject[0] == "MSG" and receivedObject.__len__() > 1:
-            if peer_username in black_list:
-                message_queue.put("BLC\n")
-            else:
-                if peer_username != "NULL":
-                    if receivedObject[1] != "":
-                        # TODO: MSG mustafa yazması durumunda hata alınıyor delimite içermiyorsa ERR gönder
-                        delimiter = ":"
-                        targetUserAndMessage = receivedObject[1]
-                        splitedTargetUserAndMessage = targetUserAndMessage.split(delimiter, 1)
-                        targetUser = splitedTargetUserAndMessage[0]
-                        finalMessage = splitedTargetUserAndMessage[1]
-                        targetMessageQueue = connections.get(targetUser, "NULL")
-                        if targetMessageQueue != "NULL":
-                            connections[targetUser][0].put("MSG " + peer_username + ":" + finalMessage + "\n")
-                            message_queue.put("MOK\n")
+            if receivedObject[0] == "USR" and receivedObject.__len__() != 6:
+                if receivedObject[1] != "":
+                    received_object_for_new_user = receivedObject[1].split(" ")
+                    username_check = self.peer_list.get(received_object_for_new_user[0], "NULL")
+                    if username_check == "NULL":
+                        if received_object_for_new_user.__len__() == 5:
+                            print("New User Register")
+                            peer_username = received_object_for_new_user[0]
+                            peer_ip = received_object_for_new_user[1]
+                            peer_port = received_object_for_new_user[2]
+                            peer_hash = received_object_for_new_user[3]
+                            peer_type = received_object_for_new_user[4]
+                            # TODO: boşluk karakteri ile test et
+                            self.connections[peer_username] = [self.message_queue, self.connection]
+                            self.peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()),
+                                                             "ON"]
+                            self.message_queue.put("HEL " + peer_username + "\n")
+                            refresh_ui_queue.put(new_user + ":" + peer_username)
                         else:
-                            message_queue.put("MNO\n")
+                            self.message_queue.put("ERR\n")
                     else:
-                        message_queue.put("ERR\n")
+                        if received_object_for_new_user[0] in self.black_list:
+                            self.message_queue.put("BLC\n")
+                        else:
+                            print("User Login")
+                            peer_username = received_object_for_new_user[0]
+                            self.connections[peer_username] = [self.message_queue, self.connection]
+                            # Signature ile kontrol yapılabilir.
                 else:
-                    message_queue.put("ERL\n")
+                    self.message_queue.put("ERR\n")
 
 
+            elif receivedObject[0] == "HEL":
+                self.message_queue.put("HEO " + peer_username + " " + peer_ip + " " + peer_port + "\n")
+                refresh_ui_queue(login)
 
-        elif receivedObject[0] == "SBS":
-            if peer_username in black_list:
-                message_queue.put("BLC"+ peer_username +"\n")
-            else:
-                if peer_username != "NULL":                   
-                    print(peer_username)
-                    my_subscribe_request.append(peer_username)
-                    refresh_ui_queue.put(new_subscribe_request + ":" + peer_username)
-                    fid = open("app_data/my_subscribe_request.txt", "a+")
-                    fid.write(peer_username + "\n")
-                    fid.close()
+            elif receivedObject[0] == "HEO":
+                self.peer_list[peer_username] = [peer_ip, peer_port, peer_hash, peer_type, str(time.ctime()), "ON"]
+
+                fid = open("app_data/self.peer_list.txt", 'a+')
+                fid.write(peer_username + ":" + str(self.peer_list[peer_username]) + "\n")
+                fid.close()
+                refresh_ui_queue.put(new_user + ":" + peer_username)
+                print("New User Register")
+                print(self.peer_list)
+
+            elif receivedObject[0] == "LSQ" and receivedObject.__len__() == 1:
+                if peer_username in self.black_list:
+                    self.message_queue.put("BLC\n")
                 else:
-                    message_queue.put("ERL "+ peer_username +"\n")
+                    if peer_username != "NULL":
+                        self.message_queue.put("LSA " + str(self.peer_list) + "\n")
+                    else:
+                        self.message_queue.put("ERL\n")
+
+            elif receivedObject[0] == "LSA":
+                if peer_username != "NULL" and receivedObject.__len__() != 1:
+                    received_self.peer_list = yaml.load(receivedObject[1])
+                    for k, v in received_self.peer_list.items():
+                        if k in self.peer_list.keys():
+                            continue
+                        else:
+                            print("New User From LSA")
+                            self.peer_list[k] = v
+
+                else:
+                    self.message_queue.put("ERL\n")
 
 
-        elif receivedObject[0] == "SBO":
-            if peer_username in black_list:
-                message_queue.put("BLC"+ peer_username +"\n")
-            else:
+
+            elif receivedObject[0] == "TIC" and receivedObject.__len__() == 1:
+                self.message_queue.put("TOC\n")
+
+
+            elif receivedObject[0] == "MSG" and receivedObject.__len__() > 1:
+                if peer_username in self.black_list:
+                    self.message_queue.put("BLC\n")
+                else:
+                    if peer_username != "NULL":
+                        if receivedObject[1] != "":
+                            # TODO: MSG mustafa yazması durumunda hata alınıyor delimite içermiyorsa ERR gönder
+                            delimiter = ":"
+                            targetUserAndMessage = receivedObject[1]
+                            splitedTargetUserAndMessage = targetUserAndMessage.split(delimiter, 1)
+                            targetUser = splitedTargetUserAndMessage[0]
+                            finalMessage = splitedTargetUserAndMessage[1]
+                            targetMessageQueue = self.connections.get(targetUser, "NULL")
+                            if targetMessageQueue != "NULL":
+                                self.connections[targetUser][0].put("MSG " + peer_username + ":" + finalMessage + "\n")
+                                self.message_queue.put("MOK\n")
+                            else:
+                                self.message_queue.put("MNO\n")
+                        else:
+                            self.message_queue.put("ERR\n")
+                    else:
+                        self.message_queue.put("ERL\n")
+
+
+
+            elif receivedObject[0] == "SBS":
+                if peer_username in self.black_list:
+                    self.message_queue.put("BLC" + peer_username + "\n")
+                else:
+                    if peer_username != "NULL":
+                        print(peer_username)
+                        self.my_subscribe_request.append(peer_username)
+                        refresh_ui_queue.put(new_subscribe_request + ":" + peer_username)
+                        fid = open("app_data/self.my_subscribe_request.txt", "a+")
+                        fid.write(peer_username + "\n")
+                        fid.close()
+                    else:
+                        self.message_queue.put("ERL " + peer_username + "\n")
+
+
+            elif receivedObject[0] == "SBO":
+                if peer_username in self.black_list:
+                    self.message_queue.put("BLC" + peer_username + "\n")
+                else:
+                    if peer_username != "NULL":
+                        index = self.sended_subscribe_request.index(peer_username)
+                        del self.sended_subscribe_request[index]
+                        self.subscribed_peers.append(peer_username)
+                        refresh_ui_queue.put(new_subscribed_peer + ":" + peer_username)
+                        fid = open("app_data/self.sended_subscribe_request.txt", "w+")
+                        d = fid.readlines()
+                        for i in d:
+                            if i != peer_username:
+                                fid.write(i + "\n")
+                        fid.close()
+                    else:
+                        self.message_queue.put("ERL " + peer_username + "\n")
+
+
+
+            elif receivedObject[0] == "SNO" and receivedObject.__len__() == 1:
+                if peer_username in self.black_list:
+                    self.message_queue.put("BLC " + peer_username + "\n")
+                else:
+                    if peer_username != "NULL":
+                        index = self.sended_subscribe_request.index(peer_username)
+                        del self.sended_subscribe_request[index]
+                    else:
+                        self.message_queue.put("ERL\n")
+
+
+
+            elif receivedObject[0] == "BLU" and receivedObject.__len__() == 1:
                 if peer_username != "NULL":
-                    index = sended_subscribe_request.index(peer_username)
-                    del sended_subscribe_request[index]
-                    subscribed_peers.append(peer_username)
-		
-		    refresh_ui_queue.put(new_subscribed_peer + ":" + peer_username)
-                    fid = open("app_data/sended_subscribe_request.txt", "w+")
-                    d = fid.readlines()
-                    for i in d:
-                        if i != peer_username:
-                            fid.write(i+"\n")
-                    fid.close()
+                    self.peer_list_that_block_me.append(peer_username)
+                    self.message_queue.put("BLO\n")
                 else:
-                    message_queue.put("ERL "+ peer_username +"\n")
+                    self.message_queue.put("ERL" + peer_username + "\n")
 
 
 
-        elif receivedObject[0] == "SNO" and receivedObject.__len__() == 1:
-            if peer_username in black_list:
-                message_queue.put("BLC "+ peer_username +"\n")
-            else:
+            elif receivedObject[0] == "UBL" and receivedObject.__len__() == 1:
                 if peer_username != "NULL":
-                    index = sended_subscribe_request.index(peer_username)
-                    del sended_subscribe_request[index]
+                    index = self.peer_list_that_block_me.index(peer_username)
+                    del self.peer_list_that_block_me[index]
+                    self.message_queue.put("UBO\n")
                 else:
-                    message_queue.put("ERL\n")
+                    self.message_queue.put("ERL\n")
 
 
 
-        elif receivedObject[0] == "BLU" and receivedObject.__len__() == 1:
-            if peer_username != "NULL":
-                peer_list_that_block_me.append(peer_username)
-                message_queue.put("BLO\n")
+            elif receivedObject[0] == "QUI" and receivedObject.__len__() == 1:
+                if peer_username != "NULL":
+                    self.message_queue.put("BYE " + peer_username + "\n")
+                    for k, v in self.connections.items():
+                        v[0].put("SYS " + peer_username + " has left.\n")
+                    self.connections.pop(peer_username)
+                else:
+                    self.message_queue.put("BYE\n")
+                print("Ending with QUI" + str(threading.enumerate()))
+                self.terminateThread = True
+
+            elif receivedObject[0] == "SOK" or receivedObject[0] == "MOK" or receivedObject[0] == "YOK" \
+                    or receivedObject[0] == "TOK" or receivedObject[0] == "PSO":
+                print(receivedObject[0])
+                pass
+
+
             else:
-                message_queue.put("ERL"+ peer_username +\n")
+                self.message_queue.put("ERR\n")
 
-
-
-        elif receivedObject[0] == "UBL" and receivedObject.__len__() == 1:
-            if peer_username != "NULL":
-                index = peer_list_that_block_me.index(peer_username)
-                del peer_list_that_block_me[index]
-                message_queue.put("UBO\n")
-            else:
-                message_queue.put("ERL\n")
-
-
-
-        elif receivedObject[0] == "QUI" and receivedObject.__len__() == 1:
-            if peer_username != "NULL":
-                message_queue.put("BYE " + peer_username + "\n")
-                for k, v in connections.items():
-                    v[0].put("SYS " + peer_username + " has left.\n")
-                connections.pop(peer_username)
-            else:
-                message_queue.put("BYE\n")
-            print("Ending with QUI" + str(threading.enumerate()))
-            terminateThread = True
-
-        elif receivedObject[0] == "SOK" or receivedObject[0] == "MOK" or receivedObject[0] == "YOK"\
-                or receivedObject[0] == "TOK" or receivedObject[0] == "PSO":
-            print(receivedObject[0])
-            pass
-
-
-        else:
-            message_queue.put("ERR\n")
 
 '''
         elif receivedObject[0] == "SAY":
             if peer_username != "NULL":
                 if not receivedObject[1].isspace():
                     message = receivedObject[1]
-                    for k, v in connections.items():
+                    for k, v in self.connections.items():
                         v[0].put("SAY " + peer_username + ":" + message + "\n")
                     messageQueue.put("SOK\n")
                 else:
@@ -425,42 +391,42 @@ class WriterThread(threading.Thread):
         self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
 
 				  
- def run(self):
+    def run(self):
         self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Starting")
         self.writeMessage()
         self.logger_queue.put(str(datetime.now()) + " - " + self.name + " Exiting")
 
-def writeMessage(connection, message_queue, terminateThread):
-    while not self.terminateThread:
-            if not self.message_queue.empty() and not self.terminateThread:
-                message = self.message_queue.get()
-                if message != "":
-                    message = message.split(" ", 1)
-                    if message[0]=="HEL" or message[0]=="HEO":
-                        message_split = message[1].split(" ", 2) # peer_username peer_ip peer_port
-                        s = socket.socket()
-                        s.connect((message_split[1], int(message_split[2])))
-                        s.send(message[0].encode())
-                        s.close()
-                    elif message[0] == "LSA":
-                        peer = self.peer_list.get(message[1].strip(), "NULL")
-                        if peer != "NULL":
-                            messageLSA = message[1].split(" ", 1)
+    def writeMessage(self):
+        while not self.terminateThread:
+                if not self.message_queue.empty() and not self.terminateThread:
+                    message = self.message_queue.get()
+                    if message != "":
+                        message = message.split(" ", 1)
+                        if message[0]=="HEL" or message[0]=="HEO":
+                            message_split = message[1].split(" ", 2) # peer_username peer_ip peer_port
                             s = socket.socket()
-                            s.connect((peer[0], int(peer[1])))
-                            s.send(self.USRString.encode())
-                            time.sleep(1)
-                            s.send((message[0] + " " + messageLSA[1]).encode())
-                            s.close()
-                    else:
-                        peer = self.peer_list.get(message[1].strip(), "NULL")
-                        if peer != "NULL":
-                            s = socket.socket()
-                            s.connect((peer[0], int(peer[1])))
-                            s.send(self.USRString.encode())
-                            time.sleep(1)
+                            s.connect((message_split[1], int(message_split[2])))
                             s.send(message[0].encode())
-                            s.close()  
+                            s.close()
+                        elif message[0] == "LSA":
+                            peer = self.peer_list.get(message[1].strip(), "NULL")
+                            if peer != "NULL":
+                                messageLSA = message[1].split(" ", 1)
+                                s = socket.socket()
+                                s.connect((peer[0], int(peer[1])))
+                                s.send(self.USRString.encode())
+                                time.sleep(1)
+                                s.send((message[0] + " " + messageLSA[1]).encode())
+                                s.close()
+                        else:
+                            peer = self.peer_list.get(message[1].strip(), "NULL")
+                            if peer != "NULL":
+                                s = socket.socket()
+                                s.connect((peer[0], int(peer[1])))
+                                s.send(self.USRString.encode())
+                                time.sleep(1)
+                                s.send(message[0].encode())
+                                s.close()
 
 
 
@@ -485,7 +451,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.sended_subscribe_request = sended_subscribe_request
         self.peer_list_that_block_me = peer_list_that_block_me
         self.my_hash = my_hash
-	self.message_list = message_list
+        self.message_list = message_list
         self.all_messages = all_messages
         self.my_blogs = my_blogs
         self.message_to_selected_index = 0
@@ -516,7 +482,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def on_UI_ready(self, data):
         data = data.split(":", 1)
-	if data[0] == new_subscribe_request:
+        if data[0] == new_subscribe_request:
             model = QStandardItemModel(self.ui.lw_requests)
             item = QStandardItem()
             item.setText(data[1])
@@ -802,12 +768,16 @@ class ClientThread(threading.Thread):
 
 
 class ServerThread(threading.Thread):
-
-    def __init__(self, s, connections, logger_queue, peer_list, my_subscribers, black_list,
+    def __init__(self, s, my_username, my_ip, my_port, my_hash, my_type, connections, logger_queue, peer_list, my_subscribers, black_list,
                  my_subscribe_request, sended_subscribe_request, subscribed_peers,
-                 peer_list_that_block_me):
+                 peer_list_that_block_me, all_messages):
         threading.Thread.__init__(self)
         self.s = s
+        self.my_username = my_username
+        self.my_ip = my_ip
+        self.my_port = my_port
+        self.my_hash = my_hash
+        self.my_type = my_type
         self.connections = connections
         self.logger_queue = logger_queue
         self.peer_list = peer_list
@@ -817,7 +787,9 @@ class ServerThread(threading.Thread):
         self.sended_subscribe_request = sended_subscribe_request
         self.subscribed_peers = subscribed_peers
         self.peer_list_that_block_me = peer_list_that_block_me
+        self.all_messages = all_messages
         self.connection_id = 0
+
 
     def run(self):
         print("server thread running")
@@ -825,15 +797,97 @@ class ServerThread(threading.Thread):
             connection, addr = self.s.accept()
             message_queue = queue.Queue()
             terminateThread = False
-            server_reader_thread = ReaderThread(connection, addr, str(self.connection_id) + '.ReaderThread', self.connections,
-                                                self.logger_queue, message_queue, self.peer_list, terminateThread, self.my_subscribers,
-                                                self.black_list, self.my_subscribe_request, self.sended_subscribe_request, self.subscribed_peers,
-                                                self.peer_list_that_block_me)
+            server_reader_thread = ReaderThread(self.my_username, connection, addr,
+                                                str(self.connection_id) + '.ReaderThread', self.connections,
+                                                self.logger_queue, message_queue, self.peer_list, terminateThread,
+                                                self.my_subscribers,
+                                                self.black_list, self.my_subscribe_request,
+                                                self.sended_subscribe_request, self.subscribed_peers,
+                                                self.peer_list_that_block_me, self.all_messages)
             server_reader_thread.start()
-            server_writer_thread = WriterThread(connection, addr, str(self.connection_id) + '.WriterThread', self.connections, self.logger_queue, message_queue, self.peer_list, terminateThread)
+            server_writer_thread = WriterThread(connection, addr, str(self.connection_id) + '.WriterThread',
+                                                self.connections, self.logger_queue, message_queue,
+                                                self.peer_list, terminateThread, self.my_username, self.my_ip,
+                                                self.my_port, self.my_hash, self.my_type)
             server_writer_thread.start()
             self.connection_id = self.connection_id + 1
             print(threading.enumerate())
+
+
+def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
+                        subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs):
+      fid = open("app_data/peer_list.txt", 'a+')
+      for line in fid:
+          line = line.split(":", 1)
+          splitted_line = yaml.load(line[1])
+          peer_list[line[0]] = [splitted_line[0], splitted_line[1], splitted_line[2], splitted_line[3], splitted_line[4], splitted_line[5]]
+          print("peerlist in load" + str(peer_list))
+          fid.close()
+      
+      fid = open("app_data/" + my_username + ".txt", 'a+')
+      for line in fid:
+          my_blogs.append(line)
+          fid.close()
+      
+      fid = open("app_data/messages.txt", 'a+')
+      for line in fid:
+          all_messages.append(line)
+          fid.close()
+      
+      fid = open("app_data/my_subscribers.txt", 'a+')
+      for line in fid:
+          my_subscribers.append(line)
+          fid.close()
+      
+      fid = open("app_data/sended_subscribe_request.txt", 'a+')
+      for line in fid:
+          sended_subscribe_request.append(line)
+          fid.close()
+      
+      fid = open("app_data/my_subscribe_request.txt", 'a+')
+      for line in fid:
+          my_subscribe_request.append(line)
+          fid.close()
+
+      fid = open("app_data/subscribed_peers.txt", 'a+')
+      for line in fid:
+          subscribed_peers.append(line)
+          fid.close()
+      
+      fid = open("app_data/black_list.txt", 'a+')
+      for line in fid:
+          black_list.append(line)
+          fid.close()
+
+      fid = open("app_data/peer_list_that_block_me.txt", 'a+')
+      for line in fid:
+          peer_list_that_block_me.append(line)
+          fid.close()
+
+def create_rsa_pair(my_username):
+    random_generator = Random.new().read
+
+    # new key pair generation
+    new_key = RSA.generate(2048, randfunc=random_generator)
+
+    # get the public key and show it
+    public_key = new_key.publickey()
+    publicKey = public_key.exportKey("PEM")
+
+    # get the private key and print
+    # private key is given directly with the pair handle
+    private_key = new_key
+
+    privateKey = new_key.exportKey("PEM")
+
+    # write to files
+    f = open('peer_keys/'+my_username+'_private_key.txt', 'w')
+    f.write(private_key.exportKey().decode())
+    f.close()
+
+    f = open('peer_keys/'+my_username+'_public_key.txt', 'w')
+    f.write(public_key.exportKey().decode())
+    f.close()
 
 
 
@@ -850,10 +904,30 @@ def main():
     subscribed_peers = []
     black_list = []
     peer_list_that_block_me = []
+    message_list = []
+    all_messages = []
+    my_blogs = []
     logger_queue = queue.Queue()
     refresh_ui_queue = queue.Queue()
     signal.signal(signal.SIGINT, partial(signal_handler, connections))
 
+    #my_ip = requests.get('http://ip.42.pl/raw').text
+    my_ip = "192.168.43.207"#socket.gethostbyname(socket.gethostname())
+    print(my_ip)
+    my_port = 12344
+    #my_username = str(uuid.NAMESPACE_DNS.hex)
+    my_username = 'mac'
+    my_type = "Y"
+    # TODO: hash'i de kaydet
+    m = hashlib.md5()
+    m.update((my_username +  " " + str(datetime.now())).encode())
+    my_hash = m.hexdigest()
+
+    if not os.path.isfile('peer_keys/'+my_username+'_private_key.txt') and not os.path.isfile('peer_keys/'+my_username+'_public_key.txt'):
+        create_rsa_pair(my_username)
+
+    load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
+                    subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs)
     s = socket.socket()
     host = "0.0.0.0"
     port = 12344
@@ -862,33 +936,28 @@ def main():
 
     logger_thread = LoggerThread(logger_queue).start()
 
-    #my_ip = requests.get('http://ip.42.pl/raw').text
-    my_ip = socket.gethostbyname(socket.gethostname())
-    print(my_ip)
-    my_port = 12344
-    my_username = str(uuid.NAMESPACE_DNS.hex)
-    my_type = "Y"
-    m = hashlib.md5()
-    m.update((my_username +  " " + str(datetime.now())).encode())
-    my_hash = m.hexdigest()
+
+
+
 
     new_peer_thread = New_Peer_Thread(peer_list, my_ip, my_port, my_username, my_type, my_hash)
     new_peer_thread.start()
 
 
 
-    server_thread = ServerThread(s, connections, logger_queue, peer_list, my_subscribers, black_list,
-                                 my_subscribe_request, sended_subscribe_request, subscribed_peers,
-                                 peer_list_that_block_me)
+    server_thread = ServerThread(s, my_username, my_ip, my_port, my_hash, my_type, connections, logger_queue,
+                                peer_list, my_subscribers, black_list,
+                                my_subscribe_request, sended_subscribe_request, subscribed_peers,
+                                peer_list_that_block_me, all_messages)
     server_thread.start()
 
 
-    my_subscribers.append("mustafa")
     app = QtWidgets.QApplication(sys.argv)
     qt_and_client = QtSideAndClient(connections, logger_queue, peer_list, my_ip, my_port,
-                                    my_username, my_type, my_subscribers, my_subscribe_request,
-                                    subscribed_peers, black_list,
-                                    sended_subscribe_request, peer_list_that_block_me, my_hash)
+                                  my_username, my_type, my_subscribers, my_subscribe_request,
+                                  subscribed_peers, black_list,
+                                  sended_subscribe_request, peer_list_that_block_me, my_hash, message_list,
+                                  my_blogs, all_messages)
     qt_and_client.run()
     app.exec_()
 

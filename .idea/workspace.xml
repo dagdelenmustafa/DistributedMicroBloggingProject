@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1736141c-33d1-475c-bf8b-13abea8e3395" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app_data/Server_Logs.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app_data/Server_Logs.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mainwindow3.ui" beforeDir="false" afterPath="$PROJECT_DIR$/mainwindow3.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainwindow3_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/mainwindow3_ui.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" afterPath="$PROJECT_DIR$/server.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -14,8 +16,8 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme2.coverage" NAME="deneme2 Coverage Results" MODIFIED="1543936847679" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme__1_.coverage" NAME="deneme (1) Coverage Results" MODIFIED="1545761671317" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Denemeler" />
-    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1545769323229" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$deneme__1_.coverage" NAME="deneme (1) Coverage Results" MODIFIED="1545923490253" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Denemeler" />
+    <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$server.coverage" NAME="server Coverage Results" MODIFIED="1546717313261" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$folder.coverage" NAME="folder Coverage Results" MODIFIED="1545230726975" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="/usr/local/lib/python3.7/site-packages/torchvision/datasets" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$transfer_learning_tutorial.coverage" NAME="transfer_learning_tutorial Coverage Results" MODIFIED="1545258214923" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$dataSetCreator.coverage" NAME="dataSetCreator Coverage Results" MODIFIED="1545244097026" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Dropbox/4-Python/FaceDetection" />
@@ -23,24 +25,33 @@
     <SUITE FILE_PATH="coverage/DistributedMicroBloggingProject$simpleClient.coverage" NAME="simpleClient Coverage Results" MODIFIED="1544546697086" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../4.Ders" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+    <leaf>
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/server.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="338">
-              <caret line="492" column="30" selection-start-line="492" selection-start-column="30" selection-end-line="492" selection-end-column="30" />
+            <state relative-caret-position="171">
+              <caret line="572" column="40" lean-forward="true" selection-start-line="572" selection-start-column="40" selection-end-line="572" selection-end-column="40" />
               <folding>
-                <element signature="e#19#32#0" expanded="true" />
+                <element signature="e#19#28#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Denemeler/deneme.py">
+        <entry file="file://$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="293">
-              <caret line="81" column="25" selection-start-line="81" selection-end-line="82" />
+            <state relative-caret-position="105">
+              <caret line="7" column="3" selection-end-line="10" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/mainwindow3_ui.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="480">
+              <caret line="260" lean-forward="true" selection-start-line="260" selection-end-line="260" />
             </state>
           </provider>
         </entry>
@@ -56,36 +67,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>for</find>
-      <find>bees</find>
-      <find>ant</find>
-      <find>4</find>
-      <find>24</find>
-      <find>train_model</find>
-      <find>'''</find>
-      <find>lsa</find>
-      <find>usr</find>
-      <find>global widget</find>
+      <find>bye</find>
+      <find>msg</find>
+      <find>mustafa</find>
+      <find>USRString</find>
+      <find>recv</find>
+      <find>connection, addr</find>
+      <find>ser</find>
+      <find>server</find>
+      <find>usrs</find>
+      <find>opn</find>
+      <find>sbsx&quot;</find>
       <find>refresh_ui_queue</find>
-      <find>while</find>
-      <find>scrollArea_all_peers</find>
-      <find>exec_</find>
-      <find>WriterThread</find>
-      <find>blu</find>
-      <find>server_log</find>
-      <find>time</find>
-      <find>USR</find>
-      <find>s.close()</find>
-      <find>textBrowser</find>
-      <find>peer_list.get</find>
-      <find>my_subscribers</find>
-      <find>my_subscribe_request</find>
-      <find>uSR</find>
-      <find>p</find>
-      <find>psh</find>
-      <find>listView</find>
-      <find>Log</find>
-      <find>sended_subscribe_request</find>
+      <find>readLines</find>
+      <find>app_data/my_subscriber</find>
+      <find>yaml</find>
+      <find>sbo</find>
+      <find>sbs</find>
+      <find>SBO</find>
+      <find>inbox</find>
+      <find>blockusr</find>
+      <find>requests</find>
+      <find>Ui_MainWindow</find>
+      <find>push</find>
+      <find>et_my_ip</find>
+      <find>hel</find>
+      <find>setpla</find>
+      <find>plain</find>
+      <find>all_messages</find>
+      <find>readand</find>
+      <find>open</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -100,15 +111,27 @@
         <option value="$PROJECT_DIR$/main_server.py" />
         <option value="$USER_HOME$/Dropbox/4-Python/FaceDetection/dataSetCreator.py" />
         <option value="$USER_HOME$/Downloads/transfer_learning_tutorial.py" />
-        <option value="$PROJECT_DIR$/mainwindow_ui.py" />
         <option value="$PROJECT_DIR$/mainwindow3.ui" />
         <option value="$PROJECT_DIR$/deneme.py" />
+        <option value="$PROJECT_DIR$/Denemeler/peer_list.txt" />
+        <option value="$PROJECT_DIR$/login_ui.ui" />
+        <option value="$PROJECT_DIR$/app_data/my_subscribe_request.txt" />
+        <option value="$PROJECT_DIR$/app_data/sended_subscribe_request.txt" />
+        <option value="$PROJECT_DIR$/Denemeler/deneme.py" />
+        <option value="$PROJECT_DIR$/app_data/my_subscribers.txt" />
+        <option value="$PROJECT_DIR$/app_data/messages.txt" />
+        <option value="$PROJECT_DIR$/app_data/peer_list.txt" />
+        <option value="$PROJECT_DIR$/mainwindow_ui.py" />
+        <option value="$PROJECT_DIR$/mainwindow3_ui.py" />
+        <option value="$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt" />
+        <option value="$PROJECT_DIR$/app_data/mac.txt" />
         <option value="$PROJECT_DIR$/server.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="width" value="1440" />
+    <option name="x" value="726" />
+    <option name="width" value="714" />
     <option name="height" value="900" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -117,7 +140,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -134,10 +156,12 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -299,23 +323,25 @@
       <workItem from="1544821017724" duration="7809000" />
       <workItem from="1545067277638" duration="2691000" />
       <workItem from="1545080268753" duration="26817000" />
-      <workItem from="1545653828392" duration="26703000" />
+      <workItem from="1545653828392" duration="82338000" />
+      <workItem from="1546161133749" duration="2215000" />
+      <workItem from="1546714577342" duration="2643000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="107061000" />
+    <option name="totallyTimeSpent" value="167554000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.27110156" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.27825466" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32891566" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.7474964" visible="true" weight="0.32891566" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.7474964" visible="true" weight="0.32891566" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -335,6 +361,49 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="os.path.isfile('app_data/peer_list.txt')" language="Python" />
+        <watch expression="os.path.isfile('messages.txt')" language="Python" />
+        <watch expression="receivedObject" language="Python" />
+        <watch expression="receivedObjects" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="watch">
+      <expression>
+        <expression-string>receivedObjects</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>receivedObject</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>os.path.isfile('messages.txt')</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>os.path.isfile('app_data/peer_list.txt')</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/deneme2.py" />
@@ -375,16 +444,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Downloads/dagitik_calismasi.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="22" lean-forward="true" selection-start-line="6" selection-end-line="7" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/Downloads/dagitik_calismasi.py" />
     <entry file="file://$USER_HOME$/Downloads/transfer_learning_tutorial.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="147">
@@ -405,69 +465,78 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mainwindow_ui.py">
+    <entry file="file://$PROJECT_DIR$/mainwindow3.ui" />
+    <entry file="file://$PROJECT_DIR$/Server_Logs" />
+    <entry file="file://$PROJECT_DIR$/user_blogs.txt" />
+    <entry file="file://$PROJECT_DIR$/deneme.py" />
+    <entry file="file://$PROJECT_DIR$/app_data/user_blogs.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8" />
+    <entry file="file://$PROJECT_DIR$/app_data/black_list" />
+    <entry file="file:///usr/local/Cellar/python/3.7.1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/_bootlocale.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="11" column="8" selection-start-line="11" selection-start-column="8" selection-end-line="11" selection-end-column="8" />
+        <state relative-caret-position="225">
+          <caret line="33" selection-start-line="33" selection-end-line="33" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mainwindow3.ui">
+    <entry file="file://$PROJECT_DIR$/Denemeler/peer_list.txt" />
+    <entry file="file:///usr/local/Cellar/python/3.7.1/Frameworks/Python.framework/Versions/3.7/lib/python3.7/threading.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="916" selection-start-line="916" selection-end-line="916" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/login_ui.py" />
+    <entry file="file://$PROJECT_DIR$/login_ui.ui" />
+    <entry file="file://$PROJECT_DIR$/Denemeler/deneme.py" />
+    <entry file="file://$PROJECT_DIR$/app_data/peer_list.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/my_subscribers.txt" />
+    <entry file="file://$PROJECT_DIR$/mainwindow_ui.py" />
+    <entry file="file://$PROJECT_DIR$/peer_keys/mac_public_key.txt" />
+    <entry file="file://$PROJECT_DIR$/peer_keys/mac_private_key.txt" />
+    <entry file="file://$PROJECT_DIR$/mainwindow_ui_asd.py" />
+    <entry file="file://$PROJECT_DIR$/app_data/messages.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/sended_subscribe_request.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/peer_list_that_block_me.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/my_subscribe_request.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/subscribed_peers.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/black_list.txt" />
+    <entry file="file://$PROJECT_DIR$/app_data/Server_Logs.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/server k.py" />
+    <entry file="file://$PROJECT_DIR$/server1.py" />
+    <entry file="file://$PROJECT_DIR$/mainwindow3_ui.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="480">
-          <caret line="498" column="5" selection-start-line="498" selection-start-column="5" selection-end-line="498" selection-end-column="5" />
+          <caret line="260" lean-forward="true" selection-start-line="260" selection-end-line="260" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Server_Logs">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/user_blogs.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="13" lean-forward="true" selection-start-line="3" selection-start-column="13" selection-end-line="3" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/deneme.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="54" selection-start-line="54" selection-end-line="87" selection-end-column="21" />
-          <folding>
-            <element signature="e#1071#1081#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app_data/user_blogs.txt">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/app_data/Server_Logs.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/mainwindow3_ui.py">
+    <entry file="file://$PROJECT_DIR$/app_data/6ba7b8109dad11d180b400c04fd430c8.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-406">
-          <caret line="10" column="19" selection-start-line="10" selection-start-column="6" selection-end-line="10" selection-end-column="19" />
+        <state relative-caret-position="105">
+          <caret line="7" column="3" selection-end-line="10" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Denemeler/deneme.py">
+    <entry file="file://$PROJECT_DIR$/app_data/mac.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="293">
-          <caret line="81" column="25" selection-start-line="81" selection-end-line="82" />
+        <state>
+          <caret column="7" lean-forward="true" selection-start-column="7" selection-end-column="7" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/server.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="492" column="30" selection-start-line="492" selection-start-column="30" selection-end-line="492" selection-end-column="30" />
+        <state relative-caret-position="171">
+          <caret line="572" column="40" lean-forward="true" selection-start-line="572" selection-start-column="40" selection-end-line="572" selection-end-column="40" />
           <folding>
-            <element signature="e#19#32#0" expanded="true" />
+            <element signature="e#19#28#0" expanded="true" />
           </folding>
         </state>
       </provider>
