@@ -246,27 +246,20 @@ class ReaderThread(threading.Thread):
 
 
             elif receivedObject[0] == "MSG" and receivedObject.__len__() > 1:
-                if peer_username in self.black_list:
-                    self.message_queue.put("BLC\n")
+                if peer_username in black_list:
+                    message_queue.put("BLC " + peer_username + "\n")
                 else:
                     if peer_username != "NULL":
-                        if receivedObject[1] != "":
-                            # TODO: MSG mustafa yazması durumunda hata alınıyor delimite içermiyorsa ERR gönder
-                            delimiter = ":"
-                            targetUserAndMessage = receivedObject[1]
-                            splitedTargetUserAndMessage = targetUserAndMessage.split(delimiter, 1)
-                            targetUser = splitedTargetUserAndMessage[0]
-                            finalMessage = splitedTargetUserAndMessage[1]
-                            targetMessageQueue = self.connections.get(targetUser, "NULL")
-                            if targetMessageQueue != "NULL":
-                                self.connections[targetUser][0].put("MSG " + peer_username + ":" + finalMessage + "\n")
-                                self.message_queue.put("MOK\n")
-                            else:
-                                self.message_queue.put("MNO\n")
-                        else:
-                            self.message_queue.put("ERR\n")
+                        message_text = receivedObject[1]
+                        all_messages.append(message_text)
+                        receivedObject_splited = receivedObject[1].split(" ", 3)
+                        refresh_ui_queue.put(new_message + ":" + receivedObject[0])
+                        fid = open("app_data/messages.txt", 'a+')
+                        fid.write(message_text + "\n")
+                        fid.close()
+                        message_queue.put("MOK " + peer_username + "\n")
                     else:
-                        self.message_queue.put("ERL\n")
+                        message_queue.put("ERL " + peer_username + "\n")
 
 
 
@@ -278,7 +271,7 @@ class ReaderThread(threading.Thread):
                         print(peer_username)
                         self.my_subscribe_request.append(peer_username)
                         refresh_ui_queue.put(new_subscribe_request + ":" + peer_username)
-                        fid = open("app_data/self.my_subscribe_request.txt", "a+")
+                        fid = open("app_data/my_subscribe_request.txt", "a+")
                         fid.write(peer_username + "\n")
                         fid.close()
                     else:

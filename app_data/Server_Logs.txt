@@ -1,0 +1,12 @@
+2019-01-06 00:54:24.818843 - 0.WriterThread Starting
+2019-01-06 00:54:24.837142 - Got New Connection from('192.168.0.33', 59530)
+2019-01-06 00:54:24.837174 - 0.ReaderThread Starting
+2019-01-06 00:54:25.968217 - 0.ReaderThread Exiting
+2019-01-06 00:55:22.073084 - 1.WriterThread Starting
+2019-01-06 00:55:22.084756 - Got New Connection from('192.168.0.33', 59532)
+2019-01-06 00:55:22.084786 - 1.ReaderThread Starting
+2019-01-06 00:55:23.297588 - 1.ReaderThread Exiting
+2019-01-06 00:56:04.611285 - Got New Connection from('192.168.0.33', 59534)
+2019-01-06 00:56:04.543260 - 2.WriterThread Starting
+2019-01-06 00:56:04.655137 - 2.ReaderThread Starting
+2019-01-06 00:56:05.745832 - 2.ReaderThread Exiting
