@@ -1,4 +1,60 @@
-2019-01-06 21:58:58.605191 - 0.WriterThread Starting
-2019-01-06 21:58:58.629519 - Got New Connection from('192.168.0.33', 56126)
-2019-01-06 21:58:58.629552 - 0.ReaderThread Starting
-2019-01-06 21:59:00.143306 - 0.ReaderThread Exiting
+2019-01-07 00:02:59.205748 - Got New Connection from('192.168.0.33', 56304)
+2019-01-07 00:02:59.224117 - 0.ReaderThread Starting
+2019-01-07 00:02:59.186921 - 0.WriterThread Starting
+2019-01-07 00:03:00.451761 - 0.ReaderThread Exiting
+2019-01-07 00:03:01.880202 - 1.WriterThread Starting
+2019-01-07 00:03:01.880265 - Got New Connection from('192.168.0.33', 56306)
+2019-01-07 00:03:01.924035 - 1.ReaderThread Starting
+2019-01-07 00:03:02.964571 - 1.ReaderThread Exiting
+2019-01-07 00:03:10.209049 - 2.WriterThread Starting
+2019-01-07 00:03:10.256484 - Got New Connection from('192.168.0.27', 52230)
+2019-01-07 00:03:10.256514 - 2.ReaderThread Starting
+2019-01-07 00:03:10.390880 - 3.WriterThread Starting
+2019-01-07 00:03:10.419028 - Got New Connection from('192.168.0.33', 56314)
+2019-01-07 00:03:10.514616 - 3.ReaderThread Starting
+2019-01-07 00:03:11.347629 - 2.ReaderThread Exiting
+2019-01-07 00:03:11.391635 - Got New Connection from('192.168.0.27', 52232)
+2019-01-07 00:03:11.439537 - 4.ReaderThread Starting
+2019-01-07 00:03:11.391599 - 4.WriterThread Starting
+2019-01-07 00:03:11.482201 - 3.ReaderThread Exiting
+2019-01-07 00:03:12.552830 - 4.ReaderThread Exiting
+2019-01-07 00:03:17.255917 - Got New Connection from('192.168.0.33', 56316)
+2019-01-07 00:03:17.280198 - 5.WriterThread Starting
+2019-01-07 00:03:17.332205 - 5.ReaderThread Starting
+2019-01-07 00:03:18.490598 - 5.ReaderThread Exiting
+2019-01-07 00:03:33.194051 - 6.WriterThread Starting
+2019-01-07 00:03:33.583340 - Got New Connection from('192.168.0.33', 56326)
+2019-01-07 00:03:33.648603 - 6.ReaderThread Starting
+2019-01-07 00:03:34.154838 - 6.ReaderThread Exiting
+2019-01-07 00:03:50.144892 - Got New Connection from('192.168.0.33', 56334)
+2019-01-07 00:03:50.144976 - 7.ReaderThread Starting
+2019-01-07 00:03:50.233155 - 7.WriterThread Starting
+2019-01-07 00:03:52.195789 - 7.ReaderThread Exiting
+2019-01-07 00:04:05.870632 - Got New Connection from('192.168.0.33', 56342)
+2019-01-07 00:04:05.900989 - 8.WriterThread Starting
+2019-01-07 00:04:05.962590 - 8.ReaderThread Starting
+2019-01-07 00:04:07.112433 - 8.ReaderThread Exiting
+2019-01-07 00:04:22.242294 - 9.WriterThread Starting
+2019-01-07 00:04:22.321645 - Got New Connection from('192.168.0.33', 56350)
+2019-01-07 00:04:22.321670 - 9.ReaderThread Starting
+2019-01-07 00:04:23.928334 - 9.ReaderThread Exiting
+2019-01-07 00:04:43.016280 - 10.WriterThread Starting
+2019-01-07 00:04:43.205970 - Got New Connection from('192.168.0.33', 56358)
+2019-01-07 00:04:43.373671 - 10.ReaderThread Starting
+2019-01-07 00:04:43.618538 - 10.ReaderThread Exiting
+2019-01-07 00:04:44.257930 - 11.WriterThread Starting
+2019-01-07 00:04:44.655778 - Got New Connection from('192.168.0.27', 52245)
+2019-01-07 00:04:44.656297 - 11.ReaderThread Starting
+2019-01-07 00:04:44.704857 - Got New Connection from('192.168.0.33', 56366)
+2019-01-07 00:04:44.704898 - 12.ReaderThread Starting
+2019-01-07 00:04:44.830518 - 12.WriterThread Starting
+2019-01-07 00:04:45.790134 - 11.ReaderThread Exiting
+2019-01-07 00:04:45.903994 - 13.WriterThread Starting
+2019-01-07 00:04:46.208024 - Got New Connection from('192.168.0.27', 52247)
+2019-01-07 00:04:46.208084 - 13.ReaderThread Starting
+2019-01-07 00:04:46.916241 - 12.ReaderThread Exiting
+2019-01-07 00:04:46.993796 - 13.ReaderThread Exiting
+2019-01-07 00:04:55.782932 - Got New Connection from('192.168.0.33', 56368)
+2019-01-07 00:04:55.872978 - 14.ReaderThread Starting
+2019-01-07 00:04:56.064080 - 14.WriterThread Starting
+2019-01-07 00:04:57.750844 - 14.ReaderThread Exiting

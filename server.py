@@ -38,7 +38,8 @@ new_subscribe_request = "1"
 new_message = "2"
 new_subscribe = "3"
 new_subscribed_peer="4"
-
+offline_peer = "5"
+online_peer = "6"
 login="10"
 
 #PC'nin MAC adresini getir.
@@ -49,14 +50,12 @@ uuid.uuid4()
 index_selectedLine=0
 
 
-def signal_handler(connections, signal, frame):
+def signal_handler(peer_list, signal, frame):
     global terminate_all_thread
     # Closing LoggerThread
     terminate_all_thread = True
     print("Bitiş " + str(threading.enumerate()))
-    for k, v in connections.items():
-        v[0].put("Server Closed\n")
-        v[1].close()
+
     sys.exit(0)
 
 
@@ -92,14 +91,64 @@ class New_Peer_Thread(threading.Thread):
     def run(self):
         global terminate_all_thread
         while not terminate_all_thread:
-            time.sleep(120)
+            time.sleep(10)
             for k, v in self.peer_list.items():
-                s = socket.socket()
-                s.connect((v[0], int(v[1])))
-                s.send(self.USRString.encode())
-                time.sleep(1)
-                s.send(self.message.encode())
-                s.close()
+                if not k == self.my_username:
+                    try:
+                        s = socket.socket()
+                        s.connect((v[0], int(v[1])))
+                        s.send(self.USRString.encode())
+                        time.sleep(1)
+                        s.send(self.message.encode())
+                        s.close()
+                    except:
+                        if self.peer_list[k][5] != "OFF":
+                            refresh_ui_queue.put(offline_peer + ":" + k)
+                            v[5] = "OFF"
+                            self.peer_list[k] = v
+                            print("OFF")
+
+'''class Peer_Check_Thread(threading.Thread):
+
+    def __init__(self, peer_list, my_ip, my_port, my_username, my_type, my_hash):
+        threading.Thread.__init__(self)
+        self.peer_list = peer_list
+        self.my_ip = my_ip
+        self.my_port = my_port
+        self.my_username = my_username
+        self.my_type = my_type
+        self.message = "TIC"
+        self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(my_hash) + " " + str(my_type)
+
+    def run(self):
+        global terminate_all_thread
+        while not terminate_all_thread:
+            time.sleep(10)
+            open("app_data/peer_list.txt", "w").close()
+            for k, v in self.peer_list.items():
+                try:
+                    s = socket.socket()
+                    s.connect((v[0], int(v[1])))
+                    s.send(self.USRString.encode())
+                    time.sleep(1)
+                    s.send(self.message.encode())
+                    s.close()
+                    v[5] = "ON"
+                    self.peer_list[k] = v
+                    fid = open("app_data/peer_list.txt", "a+")
+                    fid.write(k + ":" + str(v))
+                    fid.close()
+                    refresh_ui_queue.put(online_peer + ":" + k)
+                except:
+                    v[5] = "OFF"
+                    self.peer_list[k] = v
+                    fid = open("app_data/peer_list.txt", "a+")
+                    fid.write(k + ":" + str(v))
+                    fid.close()
+                    fid = open("app_data/peer_list.txt", "a+")
+                    fid.write(k + ":" + str(v))
+                    fid.close()
+                    refresh_ui_queue.put(offline_peer + ":" + k)'''
 
 
 class ReaderThread(threading.Thread):
@@ -194,6 +243,11 @@ class ReaderThread(threading.Thread):
                         else:
                             print("User Login")
                             self.peer_username = received_object_for_new_user[0]
+                            print(str(self.peer_list[self.peer_username][5]))
+                            if self.peer_list[self.peer_username][5] != "ON":
+                                refresh_ui_queue.put(online_peer + ":" + self.peer_username)
+                                self.peer_list[self.peer_username][5] = "ON"
+                                print("ON")
                             # Signature ile kontrol yapılabilir.
                 else:
                     self.message_queue.put("ERR\n")
@@ -459,6 +513,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
         # create the main ui
         self.ui = Ui_MainWindow()
+        self.ui.closeEvent = self.closeEvent
         self.ui.setupUi(self)
         self.clicked_message_user_name = "NULL"
 
@@ -482,6 +537,14 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.refresh_thread.ready_refresh.connect(self.on_UI_ready)
         self.refresh_thread.start()
 
+    def closeEvent(self, event):
+        print("Closing")
+        open("app_data/peer_list.txt", "w").close()
+        for k, v in self.peer_list.items():
+            print("içerdeyiz")
+            fid = open("app_data/peer_list.txt", "a+")
+            fid.write(k + ":" + str(v) + "\n")
+            fid.close()
 
 
     def login(self):
@@ -524,6 +587,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 item.setEditable(False)
                 model.appendRow(item)
                 self.ui.cb_message_to.addItem(k)
+
         self.ui.lw_peer_list.setModel(model)
         self.ui.lw_peer_list.show()
 
@@ -608,11 +672,12 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             if not data[1] == self.my_username:
                 model = QStandardItemModel(self.ui.lw_peer_list)
                 for k in self.peer_list.keys():
-                    item = QStandardItem()
-                    item.setText(k)
-                    item.setEditable(False)
-                    item.setData(k)
-                    model.appendRow(item)
+                    if not k == self.my_username:
+                        item = QStandardItem()
+                        item.setText(k)
+                        item.setEditable(False)
+                        item.setData(k)
+                        model.appendRow(item)
 
                 self.ui.lw_peer_list.setModel(model)
                 self.ui.lw_peer_list.show()
@@ -661,6 +726,9 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
 
 
+
+
+
     def publish_blog(self):
         blog_text = self.ui.et_publish_blog.toPlainText()
         self.ui.et_publish_blog.setPlainText("")
@@ -704,26 +772,30 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def peer_list_on_click(self):
         self.clicked_user_name = self.ui.lw_peer_list.selectedIndexes()[0].data()
-        if self.clicked_user_name in self.sended_subscribe_request:
-            self.ui.btn_subscribe_user.setText("Beklemede")
-        elif self.clicked_user_name in self.subscribed_peers:
-            self.ui.btn_subscribe_user.setText("Takip Ediliyor")
-        elif self.clicked_user_name in self.peer_list_that_block_me:
-            self.ui.btn_subscribe_user.setText("Engellendin")
-        elif self.clicked_user_name in self.black_list:
-            self.ui.btn_subscribe_user.setText("Engellendi")
-        else:
-            self.ui.btn_subscribe_user.setEnabled(True)
-            self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
-            self.ui.btn_subscribe_user.setText("Abone Ol")
+        if self.peer_list[self.clicked_user_name][5] != "OFF":
+            if self.clicked_user_name in self.sended_subscribe_request:
+                self.ui.btn_subscribe_user.setText("Beklemede")
+            elif self.clicked_user_name in self.subscribed_peers:
+                self.ui.btn_subscribe_user.setText("Takip Ediliyor")
+            elif self.clicked_user_name in self.peer_list_that_block_me:
+                self.ui.btn_subscribe_user.setText("Engellendin")
+            elif self.clicked_user_name in self.black_list:
+                self.ui.btn_subscribe_user.setText("Engellendi")
+            else:
+                self.ui.btn_subscribe_user.setEnabled(True)
+                self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
+                self.ui.btn_subscribe_user.setText("Abone Ol")
 
-        if self.clicked_user_name in self.black_list:
-            self.ui.btn_block_user.setText("Engellendi")
-        else:
-            self.ui.btn_block_user.setText("Engelle")
+            if self.clicked_user_name in self.black_list:
+                self.ui.btn_block_user.setText("Engellendi")
+            else:
+                self.ui.btn_block_user.setText("Engelle")
 
-        self.ui.btn_block_user.setEnabled(True)
-        self.ui.btn_block_user.pressed.connect(self.block_user)
+            self.ui.btn_block_user.setEnabled(True)
+            self.ui.btn_block_user.pressed.connect(self.block_user)
+        else:
+            self.ui.btn_subscribe_user.setText("Offline")
+            self.ui.btn_block_user.setText("Offline")
 
     def subscribe_user(self):
         peer = self.peer_list.get(self.clicked_user_name, "NULL")
@@ -1151,7 +1223,7 @@ def main():
     my_blogs = []
     logger_queue = queue.Queue()
     refresh_ui_queue = queue.Queue()
-    signal.signal(signal.SIGINT, partial(signal_handler, connections))
+    signal.signal(signal.SIGINT, partial(signal_handler, peer_list))
 
     #my_ip = requests.get('http://ip.42.pl/raw').text
     my_ip = socket.gethostbyname(socket.gethostname())
@@ -1188,8 +1260,6 @@ def main():
     s.listen()
 
     logger_thread = LoggerThread(logger_queue).start()
-
-
 
 
 
