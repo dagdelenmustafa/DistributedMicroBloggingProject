@@ -38,6 +38,7 @@ new_subscribe_request = "1"
 new_message = "2"
 new_subscribe = "3"
 new_subscribed_peer="4"
+
 login="10"
 
 #PC'nin MAC adresini getir.
@@ -217,7 +218,7 @@ class ReaderThread(threading.Thread):
                     self.message_queue.put("BLC\n")
                 else:
                     if self.peer_username != "NULL":
-                        self.message_queue.put("LSA " + str(self.peer_list) + "\n")
+                        self.message_queue.put("LSA " + self.peer_username + " " + str(self.peer_list) + "\n")
                     else:
                         self.message_queue.put("ERL\n")
 
@@ -230,6 +231,10 @@ class ReaderThread(threading.Thread):
                         else:
                             print("New User From LSA")
                             self.peer_list[k] = v
+                            fid = open("app_data/peer_list.txt", 'a+')
+                            fid.write(k + ":" + str(v) + "\n")
+                            fid.close()
+                            refresh_ui_queue.put(new_user + ":" + k)
 
                 else:
                     self.message_queue.put("ERL\n")
@@ -398,14 +403,14 @@ class WriterThread(threading.Thread):
                             s.send(message[0].encode())
                             s.close()
                         elif message[0] == "LSA":
-                            peer = self.peer_list.get(message[1].strip(), "NULL")
+                            message_split_lsa = message[1].split(" ", 1)
+                            peer = self.peer_list.get(message_split_lsa[0].strip(), "NULL")
                             if peer != "NULL":
-                                messageLSA = message[1].split(" ", 1)
                                 s = socket.socket()
                                 s.connect((peer[0], int(peer[1])))
                                 s.send(self.USRString.encode())
                                 time.sleep(1)
-                                s.send((message[0] + " " + messageLSA[1]).encode())
+                                s.send((message[0] + " " + message_split_lsa[1]).encode())
                                 s.close()
                         else:
                             peer = self.peer_list.get(message[1].strip(), "NULL")
@@ -509,16 +514,16 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
 
     def load_lasted_peers(self):
-        print("içerde")
         #PeerList_Loaded
         model = QStandardItemModel(self.ui.lw_peer_list)
         print(self.peer_list)
         for k, v in self.peer_list.items():
-            item = QStandardItem()
-            item.setText(k)
-            item.setEditable(False)
-            model.appendRow(item)
-            self.ui.cb_message_to.addItem(k)
+            if not k == self.my_username:
+                item = QStandardItem()
+                item.setText(k)
+                item.setEditable(False)
+                model.appendRow(item)
+                self.ui.cb_message_to.addItem(k)
         self.ui.lw_peer_list.setModel(model)
         self.ui.lw_peer_list.show()
 
@@ -600,14 +605,17 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.home.setEnabled(True)
 
         if data[0] == new_user:
-            item = QStandardItem()
-            item.setText(data[1])
-            item.setEditable(False)
-            item.setData(data[1])
-            self.model.appendRow(item)
+            if not data[1] == self.my_username:
+                model = QStandardItemModel(self.ui.lw_peer_list)
+                for k in self.peer_list.keys():
+                    item = QStandardItem()
+                    item.setText(k)
+                    item.setEditable(False)
+                    item.setData(k)
+                    model.appendRow(item)
 
-            self.ui.lw_peer_list.setModel(self.model)
-            self.ui.lw_peer_list.show()
+                self.ui.lw_peer_list.setModel(model)
+                self.ui.lw_peer_list.show()
 
         if data[0] == new_message:
             if self.clicked_message_user_name != "NULL" and data[1] == self.clicked_message_user_name:
@@ -837,9 +845,13 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             s.connect((peer[0], int(peer[1])))
             s.send(self.USRString.encode())
             time.sleep(1)
-            message = "MSG " + self.my_username + " " + list(self.peer_list.keys())[self.message_to_selected_index] + " " + str(datetime.now()) + " " + self.ui.et_write_msg.toPlainText()
+            message_parameters = self.my_username + " " + list(self.peer_list.keys())[self.message_to_selected_index] + " " + str(datetime.now()) + " " + self.ui.et_write_msg.toPlainText()
+            message = "MSG " + message_parameters
             s.send(message.encode())
             s.close()
+            refresh_ui_queue.put(new_message + ":" + list(self.peer_list.keys())[self.message_to_selected_index])
+            self.all_messages.append(message_parameters)
+            self.ui.et_write_msg.setPlainText("")
             fid = open("app_data/messages.txt", "a+")
             fid.write(message[4:] + "\n")
             fid.close()
