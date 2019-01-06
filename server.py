@@ -14,7 +14,8 @@ import yaml
 import uuid
 import hashlib
 
-
+from Cryptodome.Cipher import PKCS1_OAEP, AES
+from Cryptodome.Random import get_random_bytes
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QColor
@@ -247,7 +248,7 @@ class ReaderThread(threading.Thread):
                         message_text = receivedObject[1]
                         self.all_messages.append(message_text)
                         receivedObject_splited = receivedObject[1].split(" ", 3)
-                        refresh_ui_queue.put(new_message + ":" + receivedObject[0])
+                        refresh_ui_queue.put(new_message + ":" + receivedObject_splited[0])
                         fid = open("app_data/messages.txt", 'a+')
                         fid.write(message_text + "\n")
                         fid.close()
@@ -454,6 +455,8 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         # create the main ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.clicked_message_user_name = "NULL"
+
 
         self.ui.btn_publish_blog.pressed.connect(self.publish_blog)
         self.ui.btn_get_my_blog.pressed.connect(self.get_my_blogs)
@@ -606,6 +609,49 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.lw_peer_list.setModel(self.model)
             self.ui.lw_peer_list.show()
 
+        if data[0] == new_message:
+            if self.clicked_message_user_name != "NULL" and data[1] == self.clicked_message_user_name:
+                model = QStandardItemModel(self.ui.lw_inbox)
+                for line in self.all_messages:
+                    line = line.split(" ", 4)
+                    if line[0] == self.my_username and line[1] == data[1]:
+                        item = QStandardItem()
+                        item.setText(line[2] + line[3] + " : " + line[0] + " => " + line[4])
+                        item.setBackground(QColor("#666666"))
+                        item.setSelectable(False)
+                        item.setEditable(False)
+                        model.appendRow(item)
+                    elif line[0] == data[1] and line[1] == self.my_username:
+                        item = QStandardItem()
+                        item.setText(line[2] + line[3] + " : " + line[0] + " => " + line[4])
+                        item.setEditable(False)
+                        item.setSelectable(False)
+                        model.appendRow(item)
+                    else:
+                        continue
+                self.ui.lw_inbox.setModel(model)
+                self.ui.lw_inbox.show()
+                self.ui.btn_reload_messagebox.setEnabled(True)
+            else:
+                model = QStandardItemModel(self.ui.lw_inbox)
+                for line in self.all_messages:
+                    line = line.split(" ", 3)
+                    if line[0] == self.my_username and line[1] not in self.message_list:
+                        self.message_list.append(line[1])
+                    elif line[0] not in self.message_list and line[0] != self.my_username:
+                        self.message_list.append(line[0])
+
+                for line in self.message_list:
+                    item = QStandardItem()
+                    item.setText(line)
+                    item.setEditable(False)
+                    if line == data[1]:
+                        item.setBackground(QColor("#123d2f"))
+                    model.appendRow(item)
+                self.ui.lw_inbox.setModel(model)
+                self.ui.lw_inbox.show()
+
+
 
     def publish_blog(self):
         blog_text = self.ui.et_publish_blog.toPlainText()
@@ -714,6 +760,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
     def reload_messagebox(self):
         self.load_lasted_messages()
         self.ui.btn_reload_messagebox.setEnabled(False)
+        self.clicked_message_user_name = "NULL"
 
 
     def messagebox_on_click(self):
@@ -1075,7 +1122,7 @@ def create_rsa_pair(my_username):
 
 
 def main():
-    global terminate_all_thread, refresh_ui_queue
+    global terminate_all_thread, refresh_ui_queue, public_key
     terminate_all_thread = False
 
 
@@ -1108,6 +1155,9 @@ def main():
 
     if not os.path.isfile('peer_keys/'+my_username+'_private_key.txt') and not os.path.isfile('peer_keys/'+my_username+'_public_key.txt'):
         create_rsa_pair(my_username)
+    else:
+        f = open('peer_keys/'+my_username+'_public_key.txt', 'r')
+        public_key = RSA.import_key(f.read())
 
     if os.path.isfile('app_data/' + my_username + '.txt') and os.path.isfile('app_data/black_list.txt')\
             and os.path.isfile('app_data/messages.txt') and os.path.isfile('app_data/my_subscribe_request.txt')\
