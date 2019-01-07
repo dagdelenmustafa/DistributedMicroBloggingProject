@@ -1,3 +1,0 @@
-2019-01-07 10:03:22.519097 - Got New Connection from('127.0.0.1', 54120)
-2019-01-07 10:03:22.535886 - 0.ReaderThread Starting
-2019-01-07 10:03:22.536076 - 0.WriterThread Starting
