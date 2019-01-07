@@ -496,7 +496,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.ui.btn_get_my_blog.pressed.connect(self.get_my_blogs)
         self.ui.btn_reload_messagebox.pressed.connect(self.reload_messagebox)
         self.ui.btn_send_message.pressed.connect(self.send_message)
-        self.ui.btn_get_peer_blog.pressed.connect(self.get_peer_blog())
+        self.ui.btn_get_peer_blog.pressed.connect(self.get_peer_blog)
         #self.ui.btn_login.pressed.connect(self.login)
         self.ui.cb_message_to.activated.connect(self.message_to_selected)
 
@@ -704,6 +704,22 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         if data[0] == online_peer:
             pass
 
+        if data[0] == new_blogs:
+            splited_data = data[1].split(":", 2)
+            self.unreaded_blogs.append(splited_data[0])
+            model_for_active_peers = QStandardItemModel(self.ui.lw_active_peers)
+            for k, v in self.peer_list.items():
+                if not k == self.my_username and v[5] != "OFF":
+                    item = QStandardItem()
+                    item.setText(k)
+                    item.setEditable(False)
+                    if k in self.unreaded_blogs:
+                        item.setBackground(QColor("#123d2f"))
+                    model_for_active_peers.appendRow(item)
+            self.ui.lw_active_peers.setModel(model_for_active_peers)
+            self.ui.lw_active_peers.show()
+
+
     def publish_blog(self):
         blog_text = self.ui.et_publish_blog.toPlainText()
         self.ui.et_publish_blog.setPlainText("")
@@ -732,22 +748,46 @@ class QtSideAndClient(QtWidgets.QMainWindow):
     def get_my_blogs(self):
         fid = open("app_data/" + self.my_username + ".txt", 'r')
         model = QStandardItemModel(self.ui.lw_blogs)
-        self.i = 0
+        item = QStandardItem()
+        item.setText("Kendi Bloglarım")
+        item.setEditable(False)
+        item.setBackground(QColor("#666666"))
+        model.appendRow(item)
         for line in fid:
             item = QStandardItem()
             item.setText(line)
             item.setEditable(False)
-            if self.i == 0:
-                item.setBackground(QColor("#666666"))
             model.appendRow(item)
-            self.i = self.i + 1
         fid.close()
         self.ui.lw_blogs.setModel(model)
         self.ui.lw_blogs.show()
 
     def active_peer_on_click(self):
         self.clicked_user_name_for_active_peer = self.ui.lw_active_peers.selectedIndexes()[0].data()
-        self.ui.btn_get_peer_blog.setEnabled(True)
+        #TODO o ana kadar elimizde olan blogları bas
+
+        fid = open("app_data/peers_blogs/" + self.clicked_user_name_for_active_peer + ".txt", 'r')
+        model = QStandardItemModel(self.ui.lw_blogs)
+        item = QStandardItem()
+        item.setText(self.clicked_user_name_for_active_peer + " Blogları")
+        item.setEditable(False)
+        item.setBackground(QColor("#666666"))
+        model.appendRow(item)
+        for line in fid:
+            item = QStandardItem()
+            item.setText(line)
+            item.setEditable(False)
+            model.appendRow(item)
+        fid.close()
+        self.ui.lw_blogs.setModel(model)
+        self.ui.lw_blogs.show()
+
+
+
+        index = self.unreaded_blogs.index(self.clicked_user_name_for_active_peer)
+        del self.unreaded_blogs[index]
+        #TODO hash karşılaştır eğer eski bir hash ise Enable et
+        #self.ui.btn_get_peer_blog.setEnabled(True)
 
     def get_peer_blog(self):
         peer = self.peer_list.get(list(self.peer_list.keys())[self.clicked_user_name_for_active_peer], "NULL")
