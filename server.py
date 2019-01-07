@@ -32,6 +32,9 @@ from Cryptodome import Random
 # CONDITIONS
 from mainwindow_ui import Ui_MainWindow
 
+
+#TODO mesajlar ve bloglar her zaman str() olarak gönderilecek
+
 new_user = "0"
 new_subscribe_request = "1"
 new_message = "2"
@@ -40,6 +43,7 @@ new_subscribed_peer = "4"
 offline_peer = "5"
 online_peer = "6"
 new_blogs = "7"
+new_online_blog = "8"
 login = "10"
 
 # PC'nin MAC adresini getir.
@@ -86,7 +90,7 @@ class New_Peer_Thread(threading.Thread):
     def run(self):
         global terminate_all_thread
         while not terminate_all_thread:
-            time.sleep(120)
+            time.sleep(20)
             for k, v in self.peer_list.items():
                 if not k == self.my_username:
                     try:
@@ -238,7 +242,10 @@ class ReaderThread(threading.Thread):
                     received_peer_list = yaml.load(receivedObject[1])
                     for k, v in received_peer_list.items():
                         if k in self.peer_list.keys():
-                            continue
+                            peer = self.peer_list[k]
+                            if v[2] != peer[2]:
+                                peer[2] = v[2]
+                                refresh_ui_queue.put(new_online_blog + ":" + k)
                         else:
                             print("New User From LSA")
                             self.peer_list[k] = v
@@ -476,10 +483,12 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.message_list = message_list
         self.all_messages = all_messages
         self.my_blogs = my_blogs
-        self.message_to_selected_index = 0
+        self.message_to_selected_text = ""
         self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(
             my_hash) + " " + str(my_type)
         self.unreaded_blogs = []
+        self.waiting_for_get_blogs = []
+
         self.refreshUI()
 
     def refreshUI(self):
@@ -510,6 +519,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.load_lasted_messages()
         self.load_subscribers()
         self.load_lasted_active_following_peer()
+        self.ui.cb_message_to.setCurrentIndex(-1)
 
         self.refresh_thread = RefreshThread()
         self.refresh_thread.ready_refresh.connect(self.on_UI_ready)
@@ -575,7 +585,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 item.setText(k)
                 item.setEditable(False)
                 model.appendRow(item)
-                if v[5] != "OFF":
+                if v[5] != "OFF" and k != self.my_username:
                     self.ui.cb_message_to.addItem(k)
         #TODO peer ofline ise message comboboxa ekleme yapılmıyor online olduğunda ekleme yap
         self.ui.lw_peer_list.setModel(model)
@@ -725,7 +735,26 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                     item.setText(k)
                     item.setEditable(False)
                     if k in self.unreaded_blogs:
-                        item.setBackground(QColor("#123d2f"))
+                        item.setBackground(QColor("#666666"))
+                    elif k in self.waiting_for_get_blogs:
+                        item.setBackground(QColor("#ff7d00"))
+                    model_for_active_peers.appendRow(item)
+            self.ui.lw_active_peers.setModel(model_for_active_peers)
+            self.ui.lw_active_peers.show()
+
+        if data[0] == new_online_blog:
+            if not data[1] in self.waiting_for_get_blogs:
+                self.waiting_for_get_blogs.append(data[1])
+            model_for_active_peers = QStandardItemModel(self.ui.lw_active_peers)
+            for k, v in self.peer_list.items():
+                if not k == self.my_username and v[5] != "OFF":
+                    item = QStandardItem()
+                    item.setText(k)
+                    item.setEditable(False)
+                    if k in self.unreaded_blogs:
+                        item.setBackground(QColor("#666666"))
+                    elif k in self.waiting_for_get_blogs:
+                        item.setBackground(QColor("#ff7d00"))
                     model_for_active_peers.appendRow(item)
             self.ui.lw_active_peers.setModel(model_for_active_peers)
             self.ui.lw_active_peers.show()
@@ -736,24 +765,27 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.ui.et_publish_blog.setPlainText("")
         openfile = "app_data/" + self.my_username + ".txt"
         f = open(openfile, 'a+')
-        f.write(blog_text + "\n")
+        f.write(blog_text + "<:>" + str(time.ctime()) + "\n")
         f.close()
         m = hashlib.md5()
         m.update((blog_text + " " + str(datetime.now())).encode())
         self.my_hash = m.hexdigest()
+        self.peer_list[self.my_username][2] = self.my_hash
         print(str(self.my_subscribers))
         for i in self.my_subscribers:
             peer = self.peer_list.get(i, "NULL")
             if peer != "NULL" and not peer[5] == "OFF":
-                s = socket.socket()
-                print(peer[0])
-                print(peer[1])
-                s.connect((peer[0], int(peer[1])))
-                s.send(self.USRString.encode())
-                time.sleep(1)
-                message = "PSH " + blog_text + " " + str(time.ctime())
-                s.send(message.encode())
-                s.close()
+                try:
+                    s = socket.socket()
+                    s.connect((peer[0], int(peer[1])))
+                    s.send(self.USRString.encode())
+                    time.sleep(1)
+                    message = "PSH " + blog_text + " " + str(time.ctime())
+                    s.send(message.encode())
+                    s.close()
+                except:
+                    peer[5] = "OFF"
+                    print("OFF Oldu")
             else:
                 print("NULL VAR")
 
@@ -776,7 +808,6 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def active_peer_on_click(self):
         self.clicked_user_name_for_active_peer = self.ui.lw_active_peers.selectedIndexes()[0].data()
-        #TODO o ana kadar elimizde olan blogları bas
         if not os.path.isfile("app_data/peers_blogs/" + self.clicked_user_name_for_active_peer + ".txt"):
             open("app_data/peers_blogs/" + self.clicked_user_name_for_active_peer + ".txt", 'a+').close()
         fid = open("app_data/peers_blogs/" + self.clicked_user_name_for_active_peer + ".txt", 'r')
@@ -787,20 +818,28 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         item.setBackground(QColor("#666666"))
         model.appendRow(item)
         for line in fid:
+            line = line.split("<:>", 1)
             item = QStandardItem()
-            item.setText(line)
+            item.setText(line[0] + " - " + line[1])
             item.setEditable(False)
             model.appendRow(item)
         fid.close()
         self.ui.lw_blogs.setModel(model)
         self.ui.lw_blogs.show()
+        if self.clicked_user_name_for_active_peer in self.waiting_for_get_blogs:
+            # TODO hash karşılaştır eğer eski bir hash ise Enable et
+            self.ui.btn_get_peer_blog.setEnabled(True)
+        else:
+            self.ui.btn_get_peer_blog.setEnabled(False)
 
 
+        try:
+            index = self.unreaded_blogs.index(self.clicked_user_name_for_active_peer)
+            del self.unreaded_blogs[index]
+        except:
+            print("yeni blog yok")
 
-        index = self.unreaded_blogs.index(self.clicked_user_name_for_active_peer)
-        del self.unreaded_blogs[index]
-        #TODO hash karşılaştır eğer eski bir hash ise Enable et
-        #self.ui.btn_get_peer_blog.setEnabled(True)
+
 
     def get_peer_blog(self):
         peer = self.peer_list.get(list(self.peer_list.keys())[self.clicked_user_name_for_active_peer], "NULL")
@@ -817,6 +856,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             message = "GVI " + user_blog_dates[-1]
             s.send(message.encode())
             s.close()
+            #TODO GVI cevabı gelince self.waiting_for_get_blogs den gelen user indexini sil
         else:
             print("NULL VAR")
 
@@ -916,8 +956,10 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.ui.lw_inbox.show()
         self.ui.btn_reload_messagebox.setEnabled(True)
         if self.ui.btn_reload_messagebox.isEnabled():
-            self.message_to_selected_index = list(self.peer_list.keys()).index(self.clicked_message_user_name)
-            self.ui.cb_message_to.setCurrentIndex(self.message_to_selected_index)
+            self.message_to_selected_text = self.clicked_message_user_name
+            self.ui.cb_message_to.setCurrentIndex(self.ui.cb_message_to.findText(str(self.message_to_selected_text), QtCore.Qt.MatchFixedString))
+            print(self.ui.cb_message_to.findText(str(self.message_to_selected_text), QtCore.Qt.MatchFixedString))
+            print(str(self.message_to_selected_text))
 
     def request_on_click(self):
         self.clicked_user_name = self.ui.lw_requests.selectedIndexes()[0].data()
@@ -929,7 +971,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             self.ui.btn_accept_request.pressed.connect(self.add_new_subscribe)
 
     def message_to_selected(self):
-        self.message_to_selected_index = self.ui.cb_message_to.currentIndex()
+        self.message_to_selected_text = self.ui.cb_message_to.currentText()
 
     def add_new_subscribe(self):
         print("bastın")
@@ -958,7 +1000,8 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def send_message(self):
         #TODO Boş mesaj göndermeyi engelle
-        peer = self.peer_list.get(list(self.peer_list.keys())[self.message_to_selected_index], "NULL")
+        peer = self.peer_list.get(self.message_to_selected_text, "NULL")
+        print(self.message_to_selected_text)
         if peer != "NULL":
             s = socket.socket()
             print(peer[0])
@@ -966,12 +1009,11 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             s.connect((peer[0], int(peer[1])))
             s.send(self.USRString.encode())
             time.sleep(1)
-            message_parameters = self.my_username + " " + list(self.peer_list.keys())[
-                self.message_to_selected_index] + " " + str(datetime.now()) + " " + self.ui.et_write_msg.toPlainText()
+            message_parameters = self.my_username + " " + self.message_to_selected_text + " " + str(datetime.now()) + " " + self.ui.et_write_msg.toPlainText()
             message = "MSG " + message_parameters
             s.send(message.encode())
             s.close()
-            refresh_ui_queue.put(new_message + ":" + list(self.peer_list.keys())[self.message_to_selected_index])
+            refresh_ui_queue.put(new_message + ":" + self.message_to_selected_text)
             self.all_messages.append(message_parameters)
             self.ui.et_write_msg.setPlainText("")
             fid = open("app_data/messages.txt", "a+")
@@ -1145,6 +1187,18 @@ def create_rsa_pair(my_username):
     f.close()
 
 
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.255.255.255', 1))
+        ip = s.getsockname()[0]
+    except:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
+
 def main():
     global terminate_all_thread, refresh_ui_queue, public_key
     terminate_all_thread = False
@@ -1165,7 +1219,7 @@ def main():
     signal.signal(signal.SIGINT, partial(signal_handler, peer_list))
 
     # my_ip = requests.get('http://ip.42.pl/raw').text
-    my_ip = socket.gethostbyname(socket.gethostname())
+    my_ip = get_ip()
     print(my_ip)
     my_port = 12344
     # my_username = str(uuid.NAMESPACE_DNS.hex)

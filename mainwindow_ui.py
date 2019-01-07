@@ -11,11 +11,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(662, 510)
+        MainWindow.resize(662, 476)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
         self.tabWidget_2 = QtWidgets.QTabWidget(self.centralWidget)
-        self.tabWidget_2.setGeometry(QtCore.QRect(0, 10, 661, 441))
+        self.tabWidget_2.setGeometry(QtCore.QRect(0, 10, 661, 411))
         self.tabWidget_2.setMinimumSize(QtCore.QSize(661, 411))
         self.tabWidget_2.setMaximumSize(QtCore.QSize(661, 450))
         self.tabWidget_2.setObjectName("tabWidget_2")
@@ -55,15 +55,12 @@ class Ui_MainWindow(object):
         self.lw_blogs.setObjectName("lw_blogs")
         self.horizontalLayout_6.addWidget(self.lw_blogs)
         self.btn_get_my_blog = QtWidgets.QPushButton(self.home)
-        self.btn_get_my_blog.setGeometry(QtCore.QRect(480, 370, 131, 31))
+        self.btn_get_my_blog.setGeometry(QtCore.QRect(480, 340, 131, 31))
         self.btn_get_my_blog.setObjectName("btn_get_my_blog")
         self.btn_get_peer_blog = QtWidgets.QPushButton(self.home)
         self.btn_get_peer_blog.setEnabled(False)
         self.btn_get_peer_blog.setGeometry(QtCore.QRect(480, 310, 131, 31))
         self.btn_get_peer_blog.setObjectName("btn_get_peer_blog")
-        self.btn_get_lasted_15_blog = QtWidgets.QPushButton(self.home)
-        self.btn_get_lasted_15_blog.setGeometry(QtCore.QRect(480, 340, 131, 31))
-        self.btn_get_lasted_15_blog.setObjectName("btn_get_lasted_15_blog")
         self.tabWidget_2.addTab(self.home, "")
         self.peerlist = QtWidgets.QWidget()
         self.peerlist.setObjectName("peerlist")
@@ -198,7 +195,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget_2.setCurrentIndex(2)
+        self.tabWidget_2.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -209,7 +206,6 @@ class Ui_MainWindow(object):
         self.btn_publish_blog.setText(_translate("MainWindow", "Yayınla"))
         self.btn_get_my_blog.setText(_translate("MainWindow", "Kendi Yayınlarım"))
         self.btn_get_peer_blog.setText(_translate("MainWindow", "Seçili Yayını Getir"))
-        self.btn_get_lasted_15_blog.setText(_translate("MainWindow", "Son Yayınlar"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.home), _translate("MainWindow", "Home"))
         self.label_8.setText(_translate("MainWindow", "Ağda olan peer\'ların listesi"))
         self.btn_subscribe_user.setText(_translate("MainWindow", "Abone Ol"))
