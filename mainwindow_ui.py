@@ -127,6 +127,7 @@ class Ui_MainWindow(object):
         self.et_write_msg.setObjectName("et_write_msg")
         self.horizontalLayout_9.addWidget(self.et_write_msg)
         self.btn_reload_messagebox = QtWidgets.QPushButton(self.inbox)
+        self.btn_reload_messagebox.setEnabled(False)
         self.btn_reload_messagebox.setGeometry(QtCore.QRect(280, 320, 75, 23))
         self.btn_reload_messagebox.setObjectName("btn_reload_messagebox")
         self.tabWidget_2.addTab(self.inbox, "")
@@ -197,7 +198,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget_2.setCurrentIndex(0)
+        self.tabWidget_2.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
