@@ -44,6 +44,7 @@ offline_peer = "5"
 online_peer = "6"
 new_blogs = "7"
 new_online_blog = "8"
+new_block_peer = "9"
 login = "10"
 
 # PC'nin MAC adresini getir.
@@ -199,7 +200,7 @@ class ReaderThread(threading.Thread):
                             self.message_queue.put("ERR\n")
                     else:
                         if received_object_for_new_user[0] in self.black_list:
-                            self.message_queue.put("BLC\n")
+                            self.message_queue.put("BLC " + self.peer_username + "\n")
                         else:
                             print("User Login")
                             self.peer_username = received_object_for_new_user[0]
@@ -230,7 +231,7 @@ class ReaderThread(threading.Thread):
 
             elif receivedObject[0] == "LSQ" and receivedObject.__len__() == 1:
                 if self.peer_username in self.black_list:
-                    self.message_queue.put("BLC\n")
+                    self.message_queue.put("BLC " + self.peer_username + "\n")
                 else:
                     if self.peer_username != "NULL":
                         self.message_queue.put("LSA " + self.peer_username + " " + str(self.peer_list) + "\n")
@@ -268,14 +269,22 @@ class ReaderThread(threading.Thread):
                     print(peer_blogs)
                     refresh_ui_queue.put(new_blogs + ":" + peer_blogs + ":" + peer_blog_time)
                     openfile = "app_data/peers_blogs/" + self.peer_username + ".txt"
-                    print("12345")
                     fid = open(openfile, 'a+')
-                    print("123122312312")
                     fid.write(peer_blogs + "<:>" + peer_blog_time + "\n")
                     fid.close()
                     self.message_queue.put("PBO " + str(self.peer_username) + "\n")
                 else:
                     self.message_queue.put("ERR\n")
+
+            elif receivedObject[0] == "BLC":
+                blocked_peer = str(receivedObject[1].strip())
+                fid = open("app_data/black_list.txt", 'a+')
+                fid.write(blocked_peer + "\n")
+                fid.close()
+                self.message_queue.put("BLO " + "\n")
+
+            elif receivedObject[0] == "BLO":
+                print("BLO")
 
             elif receivedObject[0] == "TIC" and receivedObject.__len__() == 1:
                 self.message_queue.put("TOC\n")
@@ -514,6 +523,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.ui.lw_active_peers.clicked.connect(self.active_peer_on_click)
         self.ui.lw_inbox.clicked.connect(self.messagebox_on_click)
         self.ui.lw_requests.clicked.connect(self.request_on_click)
+        self.ui.lw_my_subscribers.clicked.connect(self.my_subscribers_on_click)
         self.load_lasted_blogs()
         self.load_lasted_peers()
         self.load_lasted_messages()
@@ -559,6 +569,8 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 model.appendRow(item)
             self.ui.lw_active_peers.setModel(model)
             self.ui.lw_active_peers.show()
+    def load_blocked_peers_list(self):
+        model = QStandardItemModel(self.ui.lw_blocked_users)
 
 
     def load_lasted_blogs(self):
@@ -618,6 +630,16 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             model.appendRow(item)
         self.ui.lw_my_subscribers.setModel(model)
         self.ui.lw_my_subscribers.show()
+
+    def load_black_list(self):
+        model = QStandardItemModel(self.ui.lw_blocked_users)
+        for i in self.black_list:
+            item = QStandardItem()
+            item.setText(i)
+            item.setEditable(False)
+            model.appendRow(item)
+        self.ui.lw_blocked_users.setModel(model)
+        self.ui.lw_blocked_users.show()
 
     def on_UI_ready(self, data):
         data = data.split(":", 1)
@@ -861,34 +883,33 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             print("NULL VAR")
 
     def peer_list_on_click(self):
-        self.clicked_user_name = self.ui.lw_peer_list.selectedIndexes()[0].data()
+        self.clicked_peer_user_name = str(self.ui.lw_peer_list.selectedIndexes()[0].data())
         if self.peer_list[self.clicked_user_name][5] != "OFF":
-            if self.clicked_user_name in self.sended_subscribe_request:
+            if self.clicked_peer_user_name in self.sended_subscribe_request:
                 self.ui.btn_subscribe_user.setText("Beklemede")
-            elif self.clicked_user_name in self.subscribed_peers:
+            elif self.clicked_peer_user_name in self.subscribed_peers:
                 self.ui.btn_subscribe_user.setText("Takip Ediliyor")
-            elif self.clicked_user_name in self.peer_list_that_block_me:
+            elif self.clicked_peer_user_name in self.peer_list_that_block_me:
                 self.ui.btn_subscribe_user.setText("Engellendin")
-            elif self.clicked_user_name in self.black_list:
+            elif self.clicked_peer_user_name in self.black_list:
                 self.ui.btn_subscribe_user.setText("Engellendi")
             else:
                 self.ui.btn_subscribe_user.setEnabled(True)
                 self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
                 self.ui.btn_subscribe_user.setText("Abone Ol")
 
-            if self.clicked_user_name in self.black_list:
+            if self.clicked_peer_user_name in self.black_list:
                 self.ui.btn_block_user.setText("Engellendi")
             else:
                 self.ui.btn_block_user.setText("Engelle")
-
-            self.ui.btn_block_user.setEnabled(True)
-            self.ui.btn_block_user.pressed.connect(self.block_user)
+                self.ui.btn_block_user.setEnabled(True)
+                self.ui.btn_block_user.clicked.connect(self.block_user_from_network_peer_list)
         else:
             self.ui.btn_subscribe_user.setText("Offline")
             self.ui.btn_block_user.setText("Offline")
 
     def subscribe_user(self):
-        peer = self.peer_list.get(self.clicked_user_name, "NULL")
+        peer = self.peer_list.get(self.clicked_peer_user_name, "NULL")
         if peer != "NULL":
             self.ui.btn_subscribe_user.setText("Beklemede")
             s = socket.socket()
@@ -902,16 +923,18 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             s.send(message.encode())
             s.close()
             fid = open("app_data/sended_subscribe_request.txt", "a+")
-            fid.write(self.clicked_user_name + "\n")
+            fid.write(self.clicked_peer_user_name + "\n")
             fid.close()
-            self.sended_subscribe_request.append(self.clicked_user_name)
+            self.sended_subscribe_request.append(self.clicked_peer_user_name)
 
         else:
             print("NULL VAR")
 
-    def block_user(self):
-        peer = self.peer_list.get(self.clicked_user_name, "NULL")
-        if peer != "NULL":
+    def block_user_from_request(self):
+        #TODO engelledikten sonra buton enable kalıyor o düzeltilecek ve black_list'e uygulama açıldığında black_list.txt dosyasındakiler eklenecek
+        print("block_user_from_request içindeyiz")
+        peer = str(self.peer_list.get(self.clicked_subscriber_name, "NULL"))
+        if peer != "NULL" and peer not in self.black_list:
             s = socket.socket()
             print(peer[0])
             print(peer[1])
@@ -921,8 +944,50 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             message = "BLU"
             s.send(message.encode())
             s.close()
-            self.black_list.append(self.clicked_user_name)
+            self.black_list.append(self.clicked_subscriber_name)
             self.ui.btn_block_user.setText("Engellendi")
+            fid = open("app_data/black_list.txt", 'a+')
+            fid.write(self.clicked_subscriber_name + "\n")
+            fid.close()
+
+        elif peer == "NULL":
+            peer_request = str(self.peer_list.get(self.clicked_request_user_name, "NULL"))
+            if peer_request != "NULL" and peer_request not in self.black_list:
+                s = socket.socket()
+                print(peer_request[0])
+                print(peer_request[1])
+                s.connect((peer_request[0], int(peer_request[1])))
+                s.send(self.USRString.encode())
+                time.sleep(1)
+                message = "BLU"
+                s.send(message.encode())
+                s.close()
+                self.black_list.append(self.clicked_request_user_name)
+                self.ui.btn_block_user.setText("Engellendi")
+                fid = open("app_data/black_list.txt", 'a+')
+                fid.write(self.clicked_request_user_name + "\n")
+                fid.close()
+
+        else:
+            print("NULL VAR")
+
+    def block_user_from_network_peer_list(self):
+        peer = str(self.peer_list.get(self.clicked_peer_user_name, "NULL"))
+        if peer != "NULL" and peer not in self.black_list:
+            s = socket.socket()
+            print(peer[0])
+            print(peer[1])
+            s.connect((peer[0], int(peer[1])))
+            s.send(self.USRString.encode())
+            time.sleep(1)
+            message = "BLU"
+            s.send(message.encode())
+            s.close()
+            self.black_list.append(self.clicked_peer_user_name)
+            self.ui.btn_block_user.setText("Engellendi")
+            fid = open("app_data/black_list.txt", 'a')
+            fid.write(self.clicked_peer_user_name + "\n")
+            fid.close()
         else:
             print("NULL VAR")
 
@@ -962,33 +1027,44 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             print(str(self.message_to_selected_text))
 
     def request_on_click(self):
-        self.clicked_user_name = self.ui.lw_requests.selectedIndexes()[0].data()
+        self.clicked_request_user_name = str(self.ui.lw_requests.selectedIndexes()[0].data())
         index_selectedLine = self.ui.lw_requests.selectedIndexes()[0]
-        if self.clicked_user_name in self.black_list:
+        if self.clicked_peer_user_name in self.black_list:
             self.ui.btn_accept_request.setText("Engellendi")
         else:
             self.ui.btn_accept_request.setEnabled(True)
             self.ui.btn_accept_request.pressed.connect(self.add_new_subscribe)
+            self.ui.btn_block_user_r.setEnabled(True)
+            self.ui.btn_block_user_r.clicked.connect(self.block_user_from_request)
+
+    def my_subscribers_on_click(self):
+        print("my_subscribers_on_click içindeyiz")
+        self.clicked_subscriber_name = str(self.ui.lw_my_subscribers.selectedIndexes()[0].data())
+        if self.clicked_subscriber_name in self.black_list:
+            self.ui.btn_block_user_r.setText("Engellendi")
+        else:
+            self.ui.btn_block_user_r.setEnabled(True)
+            self.ui.btn_block_user_r.clicked.connect(self.block_user_from_request)
 
     def message_to_selected(self):
         self.message_to_selected_text = self.ui.cb_message_to.currentText()
 
     def add_new_subscribe(self):
         print("bastın")
-        self.my_subscribers.append(self.clicked_user_name)
-        index = self.my_subscribe_request.index(self.clicked_user_name)
+        self.my_subscribers.append(self.clicked_peer_user_name)
+        index = self.my_subscribe_request.index(self.clicked_peer_user_name)
         del self.my_subscribe_request[index]
-        print(self.clicked_user_name)
-        refresh_ui_queue.put(new_subscribe + ":" + self.clicked_user_name)
-        peer = self.peer_list.get(self.clicked_user_name, "NULL")
+        print(self.clicked_peer_user_name)
+        refresh_ui_queue.put(new_subscribe + ":" + self.clicked_peer_user_name)
+        peer = self.peer_list.get(self.clicked_peer_user_name, "NULL")
         print(peer)
         fid = open("app_data/my_subscribers.txt", "a+")
-        fid.write(str(self.clicked_user_name) + "\n")
+        fid.write(str(self.clicked_peer_user_name) + "\n")
         fid.close()
         fid = open("app_data/my_subscribe_request.txt", "w+")
         d = fid.readlines()
         for i in d:
-            if i != self.clicked_user_name:
+            if i != self.clicked_peer_user_name:
                 fid.write(i + "\n")
         fid.close()
         s = socket.socket()
