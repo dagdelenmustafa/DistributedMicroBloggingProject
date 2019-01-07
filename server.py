@@ -39,6 +39,7 @@ new_subscribe = "3"
 new_subscribed_peer = "4"
 offline_peer = "5"
 online_peer = "6"
+new_blogs = "7"
 login = "10"
 
 # PC'nin MAC adresini getir.
@@ -89,7 +90,7 @@ class New_Peer_Thread(threading.Thread):
     def run(self):
         global terminate_all_thread
         while not terminate_all_thread:
-            time.sleep(10)
+            time.sleep(120)
             for k, v in self.peer_list.items():
                 if not k == self.my_username:
                     try:
@@ -255,6 +256,24 @@ class ReaderThread(threading.Thread):
 
 
 
+            elif receivedObject[0] == "PSH":
+                if self.peer_username != "NULL":
+                    splitted = str(receivedObject[1])
+                    peer_blog_time = splitted[-24:]
+                    peer_blogs = str(splitted.split(peer_blog_time,1)[0].strip())
+                    print(peer_blog_time)
+                    print(peer_blogs)
+                    refresh_ui_queue.put(new_blogs + ":" + peer_blogs + ":" + peer_blog_time)
+                    openfile = "app_data/peers_blogs/" + self.peer_username + ".txt"
+                    print("12345")
+                    fid = open(openfile, 'a+')
+                    print("123122312312")
+                    fid.write(peer_blogs + "<:>" + peer_blog_time + "\n")
+                    fid.close()
+                    self.message_queue.put("PBO " + str(self.peer_username) + "\n")
+                else:
+                    self.message_queue.put("ERR\n")
+
             elif receivedObject[0] == "TIC" and receivedObject.__len__() == 1:
                 self.message_queue.put("TOC\n")
 
@@ -269,7 +288,7 @@ class ReaderThread(threading.Thread):
                         receivedObject_splited = receivedObject[1].split(" ", 3)
                         refresh_ui_queue.put(new_message + ":" + receivedObject_splited[0])
                         fid = open("app_data/messages.txt", 'a+')
-                        fid.write(message_text + "\n")
+                        fid.write((str(message_text) + "\n"))
                         fid.close()
                         self.message_queue.put("MOK " + self.peer_username + "\n")
                     else:
@@ -1061,11 +1080,12 @@ def main():
     print(my_ip)
     my_port = 12344
     # my_username = str(uuid.NAMESPACE_DNS.hex)
-    my_username = get_mac()
+    my_username = str(get_mac())
+
     my_type = "Y"
     # TODO: hash'i de kaydet
     m = hashlib.md5()
-    m.update((my_username + " " + str(datetime.now())).encode())
+    m.update((str(my_username) + " " + str(datetime.now())).encode())
     my_hash = m.hexdigest()
 
     if not os.path.isfile('peer_keys/' + my_username + '_private_key.txt') and not os.path.isfile(
