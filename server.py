@@ -44,7 +44,6 @@ offline_peer = "5"
 online_peer = "6"
 new_blogs = "7"
 new_online_blog = "8"
-new_block_peer = "9"
 login = "10"
 
 # PC'nin MAC adresini getir.
@@ -276,15 +275,16 @@ class ReaderThread(threading.Thread):
                 else:
                     self.message_queue.put("ERR\n")
 
-            elif receivedObject[0] == "BLC":
-                blocked_peer = str(receivedObject[1].strip())
-                fid = open("app_data/black_list.txt", 'a+')
-                fid.write(blocked_peer + "\n")
-                fid.close()
-                self.message_queue.put("BLO " + "\n")
+            #elif receivedObject[0] == "BLC":
+                #blocked_peer = str(receivedObject[1].strip())
+                #fid = open("app_data/black_list.txt", 'a+')
+                #fid.write(blocked_peer + "\n")
+                #fid.close()
+                #self.message_queue.put("BLO " + "\n")
 
-            elif receivedObject[0] == "BLO":
-                print("BLO")
+            #elif receivedObject[0] == "BLO":
+                #print("BLO")
+
 
             elif receivedObject[0] == "TIC" and receivedObject.__len__() == 1:
                 self.message_queue.put("TOC\n")
@@ -520,6 +520,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.ui.cb_message_to.activated.connect(self.message_to_selected)
 
         self.ui.lw_peer_list.clicked.connect(self.peer_list_on_click)
+        self.ui.lw_blocked_users.clicked.connect(self.blocked_list_on_click)
         self.ui.lw_active_peers.clicked.connect(self.active_peer_on_click)
         self.ui.lw_inbox.clicked.connect(self.messagebox_on_click)
         self.ui.lw_requests.clicked.connect(self.request_on_click)
@@ -528,9 +529,9 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.load_lasted_peers()
         self.load_lasted_messages()
         self.load_subscribers()
+        self.load_black_list()
         self.load_lasted_active_following_peer()
         self.ui.cb_message_to.setCurrentIndex(-1)
-
         self.refresh_thread = RefreshThread()
         self.refresh_thread.ready_refresh.connect(self.on_UI_ready)
         self.refresh_thread.start()
@@ -569,8 +570,23 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 model.appendRow(item)
             self.ui.lw_active_peers.setModel(model)
             self.ui.lw_active_peers.show()
-    def load_blocked_peers_list(self):
+
+    def load_lasted_black_list(self):
         model = QStandardItemModel(self.ui.lw_blocked_users)
+        for line in self.black_list:
+            line = line.strip()
+            if line[0] == self.my_username and line[1] not in self.message_list:
+                self.message_list.append(line[1])
+            elif line[0] not in self.message_list and line[0] != self.my_username:
+                self.message_list.append(line[0])
+
+        for line in self.message_list:
+            item = QStandardItem()
+            item.setText(line)
+            item.setEditable(False)
+            model.appendRow(item)
+        self.ui.lw_inbox.setModel(model)
+        self.ui.lw_inbox.show()
 
 
     def load_lasted_blogs(self):
@@ -882,9 +898,17 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         else:
             print("NULL VAR")
 
+    def blocked_list_on_click(self):
+        self.clicked_blocked_user_name=str(self.ui.lw_blocked_users.selectedIndexes()[0].data())
+        if self.clicked_blocked_user_name != "NULL":
+            self.ui.btn_unblock_user.setEnabled(True)
+            self.ui.btn_unblock_user.clicked.connect(self.unblock_peer)
+
+
+
     def peer_list_on_click(self):
         self.clicked_peer_user_name = str(self.ui.lw_peer_list.selectedIndexes()[0].data())
-        if self.peer_list[self.clicked_user_name][5] != "OFF":
+        if self.peer_list[self.clicked_peer_user_name][5] != "OFF":
             if self.clicked_peer_user_name in self.sended_subscribe_request:
                 self.ui.btn_subscribe_user.setText("Beklemede")
             elif self.clicked_peer_user_name in self.subscribed_peers:
@@ -893,6 +917,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 self.ui.btn_subscribe_user.setText("Engellendin")
             elif self.clicked_peer_user_name in self.black_list:
                 self.ui.btn_subscribe_user.setText("Engellendi")
+                self.ui.btn_subscribe_user.setEnabled(False)
             else:
                 self.ui.btn_subscribe_user.setEnabled(True)
                 self.ui.btn_subscribe_user.pressed.connect(self.subscribe_user)
@@ -900,6 +925,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
             if self.clicked_peer_user_name in self.black_list:
                 self.ui.btn_block_user.setText("Engellendi")
+                self.ui.btn_block_user.setEnabled(False)
             else:
                 self.ui.btn_block_user.setText("Engelle")
                 self.ui.btn_block_user.setEnabled(True)
@@ -945,10 +971,18 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             s.send(message.encode())
             s.close()
             self.black_list.append(self.clicked_subscriber_name)
-            self.ui.btn_block_user.setText("Engellendi")
+            self.ui.btn_block_user_r.setEnabled(False)
+            self.ui.btn_block_user_r.setText("Engellendi")
             fid = open("app_data/black_list.txt", 'a+')
             fid.write(self.clicked_subscriber_name + "\n")
             fid.close()
+            model = QStandardItemModel(self.ui.lw_blocked_users)
+            item = QStandardItem()
+            item.setText(self.clicked_subscriber_name)
+            item.setEditable(False)
+            model.appendRow(item)
+            self.ui.lw_blocked_users.setModel(model)
+            self.ui.lw_blocked_users.show()
 
         elif peer == "NULL":
             peer_request = str(self.peer_list.get(self.clicked_request_user_name, "NULL"))
@@ -963,10 +997,18 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 s.send(message.encode())
                 s.close()
                 self.black_list.append(self.clicked_request_user_name)
-                self.ui.btn_block_user.setText("Engellendi")
+                self.ui.btn_block_user_r.setEnabled(False)
+                self.ui.btn_block_user_r.setText("Engellendi")
                 fid = open("app_data/black_list.txt", 'a+')
                 fid.write(self.clicked_request_user_name + "\n")
                 fid.close()
+                model = QStandardItemModel(self.ui.lw_blocked_users)
+                item = QStandardItem()
+                item.setText(self.clicked_request_user_name)
+                item.setEditable(False)
+                model.appendRow(item)
+                self.ui.lw_blocked_users.setModel(model)
+                self.ui.lw_blocked_users.show()
 
         else:
             print("NULL VAR")
@@ -974,7 +1016,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
     def block_user_from_network_peer_list(self):
         peer = str(self.peer_list.get(self.clicked_peer_user_name, "NULL"))
         if peer != "NULL" and peer not in self.black_list:
-            s = socket.socket()
+            '''s = socket.socket()
             print(peer[0])
             print(peer[1])
             s.connect((peer[0], int(peer[1])))
@@ -982,12 +1024,20 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             time.sleep(1)
             message = "BLU"
             s.send(message.encode())
-            s.close()
+            s.close()'''
             self.black_list.append(self.clicked_peer_user_name)
             self.ui.btn_block_user.setText("Engellendi")
+            self.ui.btn_block_user.setEnabled(False)
             fid = open("app_data/black_list.txt", 'a')
             fid.write(self.clicked_peer_user_name + "\n")
             fid.close()
+            model = QStandardItemModel(self.ui.lw_blocked_users)
+            item = QStandardItem()
+            item.setText(self.clicked_peer_user_name)
+            item.setEditable(False)
+            model.appendRow(item)
+            self.ui.lw_blocked_users.setModel(model)
+            self.ui.lw_blocked_users.show()
         else:
             print("NULL VAR")
 
@@ -1048,6 +1098,29 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def message_to_selected(self):
         self.message_to_selected_text = self.ui.cb_message_to.currentText()
+
+    def unblock_peer(self):
+        print("unblock içinde")
+        data = str(self.ui.lw_blocked_users.selectedIndexes()[0].data())
+        model = self.ui.lw_blocked_users.model()
+        for item in model.findItems(data):
+            model.removeRow(item.row())
+        self.ui.lw_blocked_users.setModel(model)
+        self.ui.lw_blocked_users.show()
+        print(self.black_list)
+        index = self.black_list.index(data)
+        del self.black_list[index]
+        print(self.black_list)
+        fid = open("app_data/black_list.txt", 'r')
+        lines = fid.readlines()
+        fid.close()
+        time.sleep(2)
+        f=open("app_data/black_list.txt", 'w')
+        for line in lines:
+            if line != data+"\n":
+                f.write(line)
+        fid.close()
+
 
     def add_new_subscribe(self):
         print("bastın")
