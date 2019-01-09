@@ -14,7 +14,7 @@ import yaml
 import uuid
 import hashlib
 
-from Cryptodome.Cipher import PKCS1_OAEP, AES
+from Cryptodome.Cipher import PKCS1_OAEP, AES, PKCS1_v1_5
 from Cryptodome.Random import get_random_bytes
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QThread
@@ -23,17 +23,14 @@ from uuid import getnode as get_mac
 from Cryptodome.PublicKey import RSA
 from Cryptodome import Random
 
-# TODO: Arayüz Ayrıntıları yapılacak
-# TODO: Belirli aralıklarla Arayüzün yenilenmesi sağlanacak
-# TODO: Public Private Key ikilisi eklenmesi yapılacak
 # TODO: RefreshThread tüm alanlar için yapılacak
-# TODO: Yayınlama protokolü yapılacak
 
 # CONDITIONS
 from mainwindow_ui import Ui_MainWindow
 
 
 #TODO mesajlar ve bloglar her zaman str() olarak gönderilecek
+from openning_window_ui import Ui_openning_window
 
 new_user = "0"
 new_subscribe_request = "1"
@@ -44,6 +41,7 @@ offline_peer = "5"
 online_peer = "6"
 new_blogs = "7"
 new_online_blog = "8"
+login_success = "9"
 login = "10"
 
 # PC'nin MAC adresini getir.
@@ -152,7 +150,7 @@ class ReaderThread(threading.Thread):
                     break
                     print(receivedObjects)
             except:
-                print("self.connection Close " + str(self.connection))
+                print("connection Close " + str(self.connection))
                 break
             receivedObject = receivedObjects.split(" ", 1)
             receivedObject[0] = receivedObject[0].replace("\n", "")
@@ -186,15 +184,10 @@ class ReaderThread(threading.Thread):
                             self.peer_port = received_object_for_new_user[2]
                             self.peer_hash = received_object_for_new_user[3]
                             self.peer_type = received_object_for_new_user[4]
-                            # TODO: boşluk karakteri ile test et
-                            self.connections[self.peer_username] = [self.message_queue, self.connection]
-                            self.peer_list[self.peer_username] = [self.peer_ip, self.peer_port, self.peer_hash,
-                                                                  self.peer_type, str(time.ctime()),
-                                                                  "ON"]
-                            print(self.peer_list[self.peer_username])
-                            self.message_queue.put(
-                                "HEL " + self.peer_username + " " + self.peer_ip + " " + self.peer_port + "\n")
-                            refresh_ui_queue.put(new_user + ":" + self.peer_username)
+                            s = socket.socket()
+                            s.connect((str(self.peer_ip), int(self.port)))
+                            s.send("HEL".encode())
+                            s.close()
                         else:
                             self.message_queue.put("ERR\n")
                     else:
@@ -215,11 +208,15 @@ class ReaderThread(threading.Thread):
 
             elif receivedObject[0] == "HEL":
                 self.message_queue.put("HEO " + self.peer_username + " " + self.peer_ip + " " + self.peer_port + "\n")
-                refresh_ui_queue(login)
+                refresh_ui_queue.put(login_success)
+
 
             elif receivedObject[0] == "HEO":
                 self.peer_list[self.peer_username] = [self.peer_ip, self.peer_port, self.peer_hash, self.peer_type,
                                                       str(time.ctime()), "ON"]
+                refresh_ui_queue.put(new_user + ":" + self.peer_username)
+                #TODO messagequeue'ya publickey'i istediğini yaz
+
 
                 fid = open("app_data/peer_list.txt", 'a+')
                 fid.write(peer_username + ":" + str(self.peer_list[peer_username]) + "\n")
@@ -241,18 +238,19 @@ class ReaderThread(threading.Thread):
                 if self.peer_username != "NULL" and receivedObject.__len__() != 1:
                     received_peer_list = yaml.load(receivedObject[1])
                     for k, v in received_peer_list.items():
-                        if k in self.peer_list.keys():
-                            peer = self.peer_list[k]
-                            if v[2] != peer[2]:
-                                peer[2] = v[2]
-                                refresh_ui_queue.put(new_online_blog + ":" + k)
-                        else:
-                            print("New User From LSA")
-                            self.peer_list[k] = v
-                            fid = open("app_data/peer_list.txt", 'a+')
-                            fid.write(k + ":" + str(v) + "\n")
-                            fid.close()
-                            refresh_ui_queue.put(new_user + ":" + k)
+                        if k != self.my_username:
+                            if k in self.peer_list.keys():
+                                peer = self.peer_list[k]
+                                if v[2] != peer[2]:
+                                    peer[2] = v[2]
+                                    refresh_ui_queue.put(new_online_blog + ":" + k)
+                            else:
+                                print("New User From LSA")
+                                self.peer_list[k] = v
+                                fid = open("app_data/peer_list.txt", 'a+')
+                                fid.write(k + ":" + str(v) + "\n")
+                                fid.close()
+                                refresh_ui_queue.put(new_user + ":" + k)
 
                 else:
                     self.message_queue.put("ERL\n")
@@ -266,7 +264,13 @@ class ReaderThread(threading.Thread):
                     peer_blogs = str(splitted.split(peer_blog_time,1)[0].strip())
                     print(peer_blog_time)
                     print(peer_blogs)
-                    refresh_ui_queue.put(new_blogs + ":" + peer_blogs + ":" + peer_blog_time)
+                    m = hashlib.md5()
+                    m.update((peer_blogs + " " + str(peer_blog_time)).encode())
+                    self.peer_list[self.peer_username][2] = m.hexdigest()
+                    print("BURADA receive içinde")
+                    print(m.hexdigest())
+                    print(str((peer_blogs + " " + str(peer_blog_time)).encode()))
+                    refresh_ui_queue.put(new_blogs + ":" + peer_blogs + ":" + self.peer_username + ":" + peer_blog_time)
                     openfile = "app_data/peers_blogs/" + self.peer_username + ".txt"
                     print("12345")
                     fid = open(openfile, 'a+')
@@ -459,13 +463,14 @@ class WriterThread(threading.Thread):
                             s.close()
 
 
-# TODO: Bu thread Qt Arayüz threadi olacak
 class QtSideAndClient(QtWidgets.QMainWindow):
     def __init__(self, connections, logger_queue, peer_list, my_ip, my_port,
                  my_username, my_type, my_subscribers, my_subscribe_request,
                  subscribed_peers, black_list,
-                 sended_subscribe_request, peer_list_that_block_me, my_hash, message_list, my_blogs, all_messages):
-        super(QtSideAndClient, self).__init__()
+                 sended_subscribe_request, peer_list_that_block_me, my_hash,
+                 message_list, my_blogs, all_messages, waiting_for_get_blogs,
+                 connection_peer_ip, connection_peer_port, parent = None):
+        QtWidgets.QMainWindow.__init__(self, parent)
         self.connections = connections
         self.logger_queue = logger_queue
         self.peer_list = peer_list
@@ -484,15 +489,47 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         self.all_messages = all_messages
         self.my_blogs = my_blogs
         self.message_to_selected_text = ""
+        self.waiting_for_get_blogs = waiting_for_get_blogs
+        self.connection_peer_ip = connection_peer_ip
+        self.connection_peer_port = connection_peer_port
         self.USRString = "USR " + str(my_username) + " " + str(my_ip) + " " + str(my_port) + " " + str(
             my_hash) + " " + str(my_type)
         self.unreaded_blogs = []
         self.waiting_for_get_blogs = []
-
+        self.start_all_connection_threads()
+        self.is_login_success = False
+        self.login_to_system()
         self.refreshUI()
 
+
+    def login_to_system(self):
+        try:
+            s = socket.socket()
+            s.connect((str(self.connection_peer_ip), int(self.connection_peer_port)))
+            s.send(self.USRString.encode())
+            s.close()
+        except:
+            self.is_login_success = False
+            QtWidgets.QMessageBox.about(self, "Hata", "Bağlantı Hatası")
+
+    def start_all_connection_threads(self):
+        s = socket.socket()
+        host = "0.0.0.0"
+        port = 12344
+        s.bind((host, port))
+        s.listen()
+
+        new_peer_thread = New_Peer_Thread(self.peer_list, self.my_ip, self.my_port, self.my_username, self.my_type, self.my_hash)
+        new_peer_thread.start()
+
+        server_thread = ServerThread(s, self.my_username, self.my_ip, self.my_port, self.my_hash, self.my_type, self.connections, self.logger_queue,
+                                     self.peer_list, self.my_subscribers, self.black_list,
+                                     self.my_subscribe_request, self.sended_subscribe_request, self.subscribed_peers,
+                                     self.peer_list_that_block_me, self.all_messages)
+        server_thread.start()
+
+
     def refreshUI(self):
-        self.qt_app = QtWidgets.QApplication(['Hello'])
         # print(type(sys.argv))
         # QtWidgets.QWidget._init_(self, None)
 
@@ -533,20 +570,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             fid = open("app_data/peer_list.txt", "a+")
             fid.write(k + ":" + str(v) + "\n")
             fid.close()
-
-    def login(self):
-        self.my_ip = self.ui.et_my_ip.toPlainText()
-        self.my_port = self.ui.et_my_port.toPlainText()
-        self.peer_ip = self.ui.et_peer_ip.toPlainText()
-        self.peer_port = self.ui.et_peer_port.toPlainText()
-        self.USRString = "USR " + str(self.my_username) + " " + str(self.my_ip) + " " + str(self.my_port) + " " + str(
-            self.my_hash) + " " + str(self.my_type)
-
-        s = socket.socket()
-        s.connect((self.peer_ip, int(self.peer_port)))
-        s.send(self.USRString.encode())
-        time.sleep(1)
-        s.close()
+        self.close()
 
     def load_lasted_active_following_peer(self):
         model = QStandardItemModel(self.ui.lw_active_peers)
@@ -556,6 +580,8 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                 item = QStandardItem()
                 item.setText(i)
                 item.setEditable(False)
+                if i in self.waiting_for_get_blogs:
+                    item.setBackground(QColor)
                 model.appendRow(item)
             self.ui.lw_active_peers.setModel(model)
             self.ui.lw_active_peers.show()
@@ -570,7 +596,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             item.setText(line)
             item.setEditable(False)
             if self.i == 0:
-                item.setBackground(QColor("#666666"))
+                item.setBackground(QColor("#ff7d00"))
             model.appendRow(item)
             self.i = self.i + 1
         self.ui.lw_blogs.setModel(model)
@@ -621,6 +647,9 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def on_UI_ready(self, data):
         data = data.split(":", 1)
+        if data[0] == login_success:
+            self.is_login_success = True
+
         if data[0] == new_subscribe_request:
             model = QStandardItemModel(self.ui.lw_requests)
             item = QStandardItem()
@@ -657,14 +686,6 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
             self.ui.lw_active_peers.setModel(model)
             self.ui.lw_active_peers.show()
-
-        if data[0] == login:
-            self.ui.login.setEnabled(False)
-            self.ui.inbox.setEnabled(True)
-            self.ui.blockusr.setEnabled(True)
-            self.ui.requests.setEnabled(True)
-            self.ui.peerlist.setEnabled(True)
-            self.ui.home.setEnabled(True)
 
         if data[0] == new_user:
             if not data[1] == self.my_username:
@@ -727,7 +748,9 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
         if data[0] == new_blogs:
             splited_data = data[1].split(":", 2)
-            self.unreaded_blogs.append(splited_data[0])
+            self.unreaded_blogs.append(splited_data[1])
+            print("queue içi")
+            print(self.unreaded_blogs)
             model_for_active_peers = QStandardItemModel(self.ui.lw_active_peers)
             for k, v in self.peer_list.items():
                 if not k == self.my_username and v[5] != "OFF":
@@ -745,6 +768,10 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         if data[0] == new_online_blog:
             if not data[1] in self.waiting_for_get_blogs:
                 self.waiting_for_get_blogs.append(data[1])
+                fid = open("app_data/waiting_for_get_blogs.txt", "a+")
+                if not data[1] in self.waiting_for_get_blogs:
+                    fid.write(data[1] + "\n")
+                fid.close()
             model_for_active_peers = QStandardItemModel(self.ui.lw_active_peers)
             for k, v in self.peer_list.items():
                 if not k == self.my_username and v[5] != "OFF":
@@ -762,15 +789,20 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
     def publish_blog(self):
         blog_text = str(self.ui.et_publish_blog.toPlainText())
+        blog_time = str(time.ctime())
         self.ui.et_publish_blog.setPlainText("")
         openfile = "app_data/" + self.my_username + ".txt"
         f = open(openfile, 'a+')
-        f.write(blog_text + "<:>" + str(time.ctime()) + "\n")
+        f.write(blog_text + "<:>" + blog_time + "\n")
         f.close()
         m = hashlib.md5()
-        m.update((blog_text + " " + str(datetime.now())).encode())
+        m.update((blog_text + " " + blog_time).encode())
         self.my_hash = m.hexdigest()
         self.peer_list[self.my_username][2] = self.my_hash
+        print("BURADA publish blog içinde")
+        print(self.my_hash)
+        print(str((blog_text + " " + blog_time).encode()))
+
         print(str(self.my_subscribers))
         for i in self.my_subscribers:
             peer = self.peer_list.get(i, "NULL")
@@ -780,7 +812,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
                     s.connect((peer[0], int(peer[1])))
                     s.send(self.USRString.encode())
                     time.sleep(1)
-                    message = "PSH " + blog_text + " " + str(time.ctime())
+                    message = "PSH " + blog_text + " " + blog_time
                     s.send(message.encode())
                     s.close()
                 except:
@@ -842,7 +874,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
 
 
     def get_peer_blog(self):
-        peer = self.peer_list.get(list(self.peer_list.keys())[self.clicked_user_name_for_active_peer], "NULL")
+        peer = self.peer_list.get(self.clicked_user_name_for_active_peer, "NULL")
         user_blog_dates = []
         if peer != "NULL":
             s = socket.socket()
@@ -856,7 +888,7 @@ class QtSideAndClient(QtWidgets.QMainWindow):
             message = "GVI " + user_blog_dates[-1]
             s.send(message.encode())
             s.close()
-            #TODO GVI cevabı gelince self.waiting_for_get_blogs den gelen user indexini sil
+            #TODO GVI cevabı gelince self.waiting_for_get_blogs'dan ve dosyadan gelen user indexini sil
         else:
             print("NULL VAR")
 
@@ -1022,10 +1054,12 @@ class QtSideAndClient(QtWidgets.QMainWindow):
         else:
             print("NULL VAR")
 
+
+    def exit(self):
+        self.close()
+
     def run(self):
         self.show()
-        self.qt_app.exec_()
-
 
 class RefreshThread(QThread):
     ready_refresh = QtCore.pyqtSignal(object)
@@ -1090,7 +1124,7 @@ class ServerThread(threading.Thread):
 
 
 def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
-                      subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs):
+                      subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs, waiting_for_get_blogs):
     fid = open("app_data/peer_list.txt", 'r')
     for line in fid:
         line = line.split(":", 1)
@@ -1148,6 +1182,12 @@ def load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_reque
         peer_list_that_block_me.append(line)
     fid.close()
 
+    fid = open("app_data/waiting_for_get_blogs.txt", 'r')
+    for line in fid:
+        line = line.replace("\n", "")
+        waiting_for_get_blogs.append(line)
+    fid.close()
+
 
 def create_app_data(my_username):
     open("app_data/" + my_username + ".txt", 'a').close()
@@ -1159,6 +1199,7 @@ def create_app_data(my_username):
     open('app_data/peer_list.txt', 'a').close()
     open('app_data/sended_subscribe_request.txt', 'a').close()
     open('app_data/subscribed_peers.txt', 'a').close()
+    open('app_data/waiting_for_get_blogs.txt', 'a').close()
 
 
 def create_rsa_pair(my_username):
@@ -1199,8 +1240,85 @@ def get_ip():
         s.close()
     return ip
 
+def encrypt_message(message):
+    global public_key
+    cipher = PKCS1_v1_5.new(public_key)
+    ciphertext = cipher.encrypt(message.encode())
+    return ciphertext
+
+def decrypt_message(ciphertext):
+    global private_key
+    sentinel = Random.new().read(15)
+    cipher = PKCS1_v1_5.new(private_key)
+    message = cipher.decrypt(ciphertext, sentinel)
+    return message
+
+
+
+
+class OpeningScreen_UI(QtWidgets.QMainWindow):
+    def __init__(self,connections,logger_queue, peer_list, my_ip, my_port, my_username, my_type, my_subscribers, my_subscribe_request,
+                 subscribed_peers, black_list, sended_subscribe_request, peer_list_that_block_me, my_hash, message_list, all_messages,
+                 my_blogs, waiting_for_get_blogs, parent = None):
+        self.qt_app = QtWidgets.QApplication([])
+        super(OpeningScreen_UI, self).__init__(parent)
+
+        self.connections = connections
+        self.logger_queue = logger_queue
+        self.peer_list = peer_list
+        self.my_ip = my_ip
+        self.my_port = my_port
+        self.my_username = my_username
+        self.my_type = my_type
+        self.my_subscribers = my_subscribers
+        self.my_subscribe_request = my_subscribe_request
+        self.subscribed_peers = subscribed_peers
+        self.black_list = black_list
+        self.sended_subscribe_request = sended_subscribe_request
+        self.peer_list_that_block_me = peer_list_that_block_me
+        self.my_hash = my_hash
+        self.message_list = message_list
+        self.all_messages = all_messages
+        self.my_blogs = my_blogs
+        self.waiting_for_get_blogs = waiting_for_get_blogs
+
+        # create the main ui
+        self.ui = Ui_openning_window()
+        self.ui.setupUi(self)
+        self.ui.btn_connect.clicked.connect(self.get_peer_info)
+        self.ui.et_ip.setPlainText(str(self.my_ip))
+        self.ui.et_port.setPlainText(str(self.my_port))
+        self.ui.et_ip.setEnabled(False)
+        self.ui.et_port.setEnabled(False)
+
+    def get_peer_info(self):
+        self.peer_ip = self.ui.et_ip.toPlainText()
+        self.peer_port = self.ui.et_port.toPlainText()
+        self.peer_c_ip = self.ui.et_c_ip.toPlainText()
+        self.peer_c_port = self.ui.et_c_port.toPlainText()
+
+        if self.peer_ip and self.peer_port and self.peer_c_ip and self.peer_c_port:
+            print(self.peer_ip)
+            print(self.peer_c_ip)
+
+            self.close()
+
+            qt_and_client = QtSideAndClient(self.connections, self.logger_queue, self.peer_list, self.my_ip, self.my_port,
+                                            self.my_username, self.my_type, self.my_subscribers, self.my_subscribe_request,
+                                            self.subscribed_peers, self.black_list,
+                                            self.sended_subscribe_request, self.peer_list_that_block_me, self.my_hash, self.message_list,
+                                            self.my_blogs, self.all_messages, self.waiting_for_get_blogs, self.peer_c_ip, self.peer_c_port)
+            qt_and_client.run()
+
+
+
+    def run(self):
+        self.show()
+        self.qt_app.exec_()
+
+
 def main():
-    global terminate_all_thread, refresh_ui_queue, public_key
+    global terminate_all_thread, refresh_ui_queue, public_key, private_key
     terminate_all_thread = False
 
     connections = {}
@@ -1214,19 +1332,16 @@ def main():
     message_list = []
     all_messages = []
     my_blogs = []
+    waiting_for_get_blogs = []
     logger_queue = queue.Queue()
     refresh_ui_queue = queue.Queue()
     signal.signal(signal.SIGINT, partial(signal_handler, peer_list))
 
-    # my_ip = requests.get('http://ip.42.pl/raw').text
     my_ip = get_ip()
-    print(my_ip)
     my_port = 12344
-    # my_username = str(uuid.NAMESPACE_DNS.hex)
     my_username = str(get_mac())
 
     my_type = "Y"
-    # TODO: hash'i de kaydet
     m = hashlib.md5()
     m.update((str(my_username) + " " + str(datetime.now())).encode())
     my_hash = m.hexdigest()
@@ -1237,43 +1352,31 @@ def main():
     else:
         f = open('peer_keys/' + my_username + '_public_key.txt', 'r')
         public_key = RSA.import_key(f.read())
+        f.close()
+        f =  open('peer_keys/' + my_username + '_private_key.txt')
+        private_key = RSA.import_key(f.read())
 
     if os.path.isfile('app_data/' + my_username + '.txt') and os.path.isfile('app_data/black_list.txt') \
             and os.path.isfile('app_data/messages.txt') and os.path.isfile('app_data/my_subscribe_request.txt') \
             and os.path.isfile('app_data/my_subscribers.txt') and os.path.isfile('app_data/peer_list.txt') \
-            and os.path.isfile('app_data/peer_list_that_block_me.txt') and os.path.isfile(
-        'app_data/sended_subscribe_request.txt') \
-            and os.path.isfile('app_data/subscribed_peers.txt'):
+            and os.path.isfile('app_data/peer_list_that_block_me.txt') and os.path.isfile('app_data/sended_subscribe_request.txt') \
+            and os.path.isfile('app_data/subscribed_peers.txt') and os.path.isfile('app_data/waiting_for_get_blogs.txt'):
         load_lasted_files(my_username, peer_list, my_subscribers, my_subscribe_request, sended_subscribe_request,
-                          subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs)
+                          subscribed_peers, black_list, peer_list_that_block_me, all_messages, my_blogs, waiting_for_get_blogs)
     else:
         create_app_data(my_username)
 
-    print(str(my_subscribers))
-    s = socket.socket()
-    host = "0.0.0.0"
-    port = 12344
-    s.bind((host, port))
-    s.listen()
+
 
     logger_thread = LoggerThread(logger_queue).start()
 
-    new_peer_thread = New_Peer_Thread(peer_list, my_ip, my_port, my_username, my_type, my_hash)
-    new_peer_thread.start()
-
-    server_thread = ServerThread(s, my_username, my_ip, my_port, my_hash, my_type, connections, logger_queue,
-                                 peer_list, my_subscribers, black_list,
-                                 my_subscribe_request, sended_subscribe_request, subscribed_peers,
-                                 peer_list_that_block_me, all_messages)
-    server_thread.start()
-
-    app = QtWidgets.QApplication(sys.argv)
-    qt_and_client = QtSideAndClient(connections, logger_queue, peer_list, my_ip, my_port,
+    qt_openning_screen = OpeningScreen_UI(connections, logger_queue, peer_list, my_ip, my_port,
                                     my_username, my_type, my_subscribers, my_subscribe_request,
                                     subscribed_peers, black_list,
-                                    sended_subscribe_request, peer_list_that_block_me, my_hash, message_list,
-                                    my_blogs, all_messages)
-    qt_and_client.run()
+                                    sended_subscribe_request, peer_list_that_block_me, my_hash,
+                                    message_list,
+                                    my_blogs, all_messages, waiting_for_get_blogs)
+    qt_openning_screen.run()
 
 
 if __name__ == "__main__":
