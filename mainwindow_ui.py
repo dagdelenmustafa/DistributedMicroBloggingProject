@@ -219,6 +219,7 @@ class Ui_MainWindow(object):
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.inbox), _translate("MainWindow", "Inbox"))
         self.label_12.setText(_translate("MainWindow", "Engellenmiş Peer Listesi"))
         self.btn_unblock_user.setText(_translate("MainWindow", "Engelli Kaldır"))
+        self.btn_unblock_user.setEnabled(False)
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.blockusr), _translate("MainWindow", "Blocked Users"))
         self.btn_block_user_r.setText(_translate("MainWindow", "Engelle"))
         self.btn_accept_request.setText(_translate("MainWindow", "Onayla"))
